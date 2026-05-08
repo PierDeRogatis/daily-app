@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Assistant">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="manifest" href="manifest.json">
+  <title>Personal Assistant</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --border: #334155;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #6366f1;
+      --accent-dim: #4f46e5;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --radius: 14px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      padding: calc(var(--safe-top) + 16px) 16px calc(var(--safe-bottom) + 16px);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+    }
+
+    .logo { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+    .logo span { color: var(--accent); }
+
+    button.icon-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--muted);
+      width: 40px; height: 40px;
+      display: grid; place-items: center;
+      cursor: pointer;
+      font-size: 18px;
+      transition: color .15s;
+    }
+    button.icon-btn:hover { color: var(--text); }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    input, textarea, select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 16px;
+      font-family: inherit;
+      padding: 12px 14px;
+      width: 100%;
+      outline: none;
+      transition: border-color .15s;
+      -webkit-appearance: none;
+    }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; }
+
+    textarea { resize: none; min-height: 80px; line-height: 1.5; }
+
+    select option { background: var(--surface); }
+
+    .title-input {
+      font-size: 18px;
+      font-weight: 500;
+      padding: 14px;
+    }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    button.submit {
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 16px;
+      cursor: pointer;
+      width: 100%;
+      transition: background .15s, transform .1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button.submit:active { transform: scale(0.98); background: var(--accent-dim); }
+    button.submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .toast {
+      position: fixed;
+      bottom: calc(var(--safe-bottom) + 24px);
+      left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--success);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 12px 24px;
+      border-radius: 100px;
+      white-space: nowrap;
+      transition: transform .3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity .3s;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 100;
+    }
+    .toast.error { background: var(--danger); }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    /* Settings screen */
+    #settings { display: none; flex-direction: column; gap: 16px; }
+    #settings.active { display: flex; }
+    #main { display: flex; flex-direction: column; gap: 16px; }
+    #main.hidden { display: none; }
+
+    .settings-note {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .settings-note a { color: var(--accent); text-decoration: none; }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Recent tasks */
+    .recent-list { display: flex; flex-direction: column; gap: 8px; }
+    .recent-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .recent-item .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: #312e81;
+      color: #a5b4fc;
+      flex-shrink: 0;
+    }
+    .recent-item .title { flex: 1; color: var(--text); }
+    .recent-item .repo { font-size: 12px; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">daily<span>.</span></div>
+  <button class="icon-btn" id="settingsBtn" title="Settings">⚙️</button>
+</header>
+
+<!-- Main capture screen -->
+<div id="main">
+  <div class="card">
+    <label>
+      What's on your mind?
+      <input class="title-input" type="text" id="title" placeholder="Task or idea…" autocomplete="off" autofocus>
+    </label>
+
+    <div class="row">
+      <label>
+        Project
+        <select id="repo">
+          <option value="ai-newsletter">ai-newsletter</option>
+          <option value="ai-newsletter-private">newsletter (private)</option>
+          <option value="watchforward-scout">wf-scout</option>
+          <option value="watchforward-os">wf-os</option>
+          <option value="watchforward-public">wf-public</option>
+          <option value="personal-assistant">inbox</option>
+        </select>
+      </label>
+      <label>
+        Due date
+        <input type="date" id="due">
+      </label>
+    </div>
+
+    <label>
+      Notes <span style="font-weight:400">(optional)</span>
+      <textarea id="notes" placeholder="Extra context…"></textarea>
+    </label>
+
+    <button class="submit" id="submitBtn">Add task</button>
+  </div>
+
+  <div id="recentSection" style="display:none">
+    <p class="section-title" style="margin-bottom:10px">Added today</p>
+    <div class="recent-list" id="recentList"></div>
+  </div>
+</div>
+
+<!-- Settings screen -->
+<div id="settings">
+  <div class="settings-note">
+    Enter a GitHub Personal Access Token with <strong>repo</strong> scope.<br><br>
+    Create one at <a href="https://github.com/settings/tokens/new?description=personal-assistant-app&scopes=repo" target="_blank">github.com/settings/tokens</a>.<br><br>
+    The token is stored only in this browser (localStorage).
+  </div>
+  <div class="card">
+    <label>
+      GitHub Token
+      <input type="password" id="tokenInput" placeholder="ghp_…" autocomplete="off">
+    </label>
+    <button class="submit" id="saveTokenBtn">Save token</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const OWNER = 'PierDeRogatis';
+  const TOKEN_KEY = 'gh_token';
+
+  // --- State ---
+  let token = localStorage.getItem(TOKEN_KEY) || '';
+  let session = JSON.parse(sessionStorage.getItem('added') || '[]');
+
+  // --- DOM ---
+  const mainEl = document.getElementById('main');
+  const settingsEl = document.getElementById('settings');
+  const settingsBtn = document.getElementById('settingsBtn');
+  const tokenInput = document.getElementById('tokenInput');
+  const saveTokenBtn = document.getElementById('saveTokenBtn');
+  const submitBtn = document.getElementById('submitBtn');
+  const toastEl = document.getElementById('toast');
+  const recentSection = document.getElementById('recentSection');
+  const recentList = document.getElementById('recentList');
+
+  // --- Init ---
+  function init() {
+    if (!token) {
+      showSettings();
+    } else {
+      showMain();
+      renderRecent();
+    }
+    // Set today as default due date
+    document.getElementById('due').value = new Date().toISOString().split('T')[0];
+  }
+
+  function showSettings() {
+    mainEl.classList.add('hidden');
+    settingsEl.classList.add('active');
+    settingsBtn.textContent = '✕';
+  }
+
+  function showMain() {
+    settingsEl.classList.remove('active');
+    mainEl.classList.remove('hidden');
+    settingsBtn.textContent = '⚙️';
+  }
+
+  settingsBtn.addEventListener('click', () => {
+    if (settingsEl.classList.contains('active')) {
+      if (token) showMain();
+    } else {
+      showSettings();
+    }
+  });
+
+  saveTokenBtn.addEventListener('click', () => {
+    const val = tokenInput.value.trim();
+    if (!val.startsWith('ghp_') && !val.startsWith('github_pat_')) {
+      showToast('Invalid token format', true); return;
+    }
+    token = val;
+    localStorage.setItem(TOKEN_KEY, token);
+    tokenInput.value = '';
+    showMain();
+    showToast('Token saved');
+  });
+
+  // --- Submit ---
+  submitBtn.addEventListener('click', addTask);
+  document.getElementById('title').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addTask(); }
+  });
+
+  async function addTask() {
+    const title = document.getElementById('title').value.trim();
+    const repo  = document.getElementById('repo').value;
+    const due   = document.getElementById('due').value;
+    const notes = document.getElementById('notes').value.trim();
+
+    if (!title) { document.getElementById('title').focus(); return; }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Adding…';
+
+    let body = notes || '';
+    if (due) body = `due: ${due}\n\n${body}`.trim();
+
+    try {
+      const res = await fetch(`https://api.github.com/repos/${OWNER}/${repo}/issues`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/vnd.github+json',
+        },
+        body: JSON.stringify({ title, body, labels: ['inbox'] }),
+      });
+
+      if (res.status === 401) { showToast('Token invalid — check settings', true); showSettings(); return; }
+      if (!res.ok) throw new Error(await res.text());
+
+      const issue = await res.json();
+      session.unshift({ title, repo, url: issue.html_url, due });
+      sessionStorage.setItem('added', JSON.stringify(session));
+
+      document.getElementById('title').value = '';
+      document.getElementById('notes').value = '';
+      document.getElementById('due').value = new Date().toISOString().split('T')[0];
+      document.getElementById('title').focus();
+
+      renderRecent();
+      showToast(`Added to ${repo}`);
+    } catch (e) {
+      showToast('Failed — check connection', true);
+      console.error(e);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Add task';
+    }
+  }
+
+  // --- Recent ---
+  function renderRecent() {
+    if (!session.length) { recentSection.style.display = 'none'; return; }
+    recentSection.style.display = 'block';
+    recentList.innerHTML = session.slice(0, 5).map(t => `
+      <a href="${t.url}" target="_blank" class="recent-item" style="text-decoration:none">
+        <span class="badge">${t.repo.replace('watchforward-', 'wf-')}</span>
+        <span class="title">${esc(t.title)}</span>
+        ${t.due ? `<span class="repo">${t.due}</span>` : ''}
+      </a>
+    `).join('');
+  }
+
+  // --- Toast ---
+  let toastTimer;
+  function showToast(msg, error = false) {
+    clearTimeout(toastTimer);
+    toastEl.textContent = msg;
+    toastEl.className = 'toast' + (error ? ' error' : '');
+    requestAnimationFrame(() => toastEl.classList.add('show'));
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2800);
+  }
+
+  function esc(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // --- Service worker ---
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+
+  init();
+</script>
+</body>
+</html>
