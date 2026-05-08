@@ -291,7 +291,7 @@
 <script>
 const OWNER = 'PierDeRogatis';
 const TOKEN_KEY = 'gh_token';
-const DATA_URL = `https://raw.githubusercontent.com/${OWNER}/daily-app/main/daily.json`;
+const DATA_API = `https://api.github.com/repos/${OWNER}/personal-assistant/contents/daily.json`;
 
 let token = localStorage.getItem(TOKEN_KEY) || '';
 
@@ -337,12 +337,15 @@ async function loadBriefing() {
   contEl.style.display = 'none';
   errEl.style.display  = 'none';
 
+  if (!token) { loadEl.style.display = 'none'; errEl.style.display = 'block'; return; }
+
   try {
-    const res = await fetch(DATA_URL + '?t=' + Date.now(), {
-      headers: token ? { Authorization: 'Bearer ' + token } : {},
+    const res = await fetch(DATA_API + '?t=' + Date.now(), {
+      headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json' },
     });
     if (!res.ok) throw new Error(res.status);
-    const data = await res.json();
+    const envelope = await res.json();
+    const data = JSON.parse(atob(envelope.content.replace(/\n/g, '')));
     renderBriefing(data);
     loadEl.style.display = 'none';
     contEl.style.display = 'flex';
