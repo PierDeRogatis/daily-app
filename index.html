@@ -38,6 +38,41 @@
       overflow: hidden;
     }
 
+    /* Lock screen */
+    #lock-screen {
+      display: none;
+      position: fixed; inset: 0; z-index: 999;
+      background: var(--bg);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: calc(var(--safe-top) + 40px) 32px calc(var(--safe-bottom) + 40px);
+    }
+    #lock-screen.open { display: flex; }
+    .lock-logo { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
+    .lock-logo span { color: var(--accent); }
+    .lock-icon { font-size: 48px; margin-bottom: 4px; }
+    .lock-hint { font-size: 15px; color: var(--muted); }
+    #lockInput {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; color: var(--text); font-size: 18px;
+      padding: 14px 18px; width: 100%; max-width: 320px;
+      outline: none; text-align: center; letter-spacing: 3px;
+      -webkit-appearance: none;
+      transition: border-color .15s;
+    }
+    #lockInput:focus { border-color: var(--accent); }
+    #unlockBtn {
+      background: var(--accent); border: none; border-radius: 12px;
+      color: #fff; font-size: 16px; font-weight: 600;
+      padding: 14px 32px; cursor: pointer; width: 100%; max-width: 320px;
+      -webkit-tap-highlight-color: transparent;
+      transition: background .15s, transform .1s;
+    }
+    #unlockBtn:active { transform: scale(0.97); background: var(--accent-dim); }
+    .lock-error { font-size: 13px; color: var(--danger); min-height: 18px; }
+
     /* Header */
     header {
       padding: calc(var(--safe-top) + 14px) 20px 14px;
@@ -114,6 +149,7 @@
       border-radius: var(--radius);
       padding: 16px;
     }
+    .card-title { font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
     .section-label {
       font-size: 11px; font-weight: 700; color: var(--muted);
       text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px;
@@ -189,6 +225,13 @@
     }
     button.submit:active { transform: scale(0.98); background: var(--accent-dim); }
     button.submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    button.submit.danger { background: var(--danger); }
+    button.submit.danger:active { background: #dc2626; }
+    button.submit.secondary {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    button.submit.secondary:active { background: var(--surface); }
 
     .settings-note {
       font-size: 13px; color: var(--muted); line-height: 1.6;
@@ -212,6 +255,16 @@
 </head>
 <body>
 
+<!-- LOCK SCREEN -->
+<div id="lock-screen">
+  <div class="lock-logo">daily<span>.</span></div>
+  <div class="lock-icon">🔒</div>
+  <div class="lock-hint">Enter passphrase to continue</div>
+  <input type="password" id="lockInput" placeholder="Passphrase…" autocomplete="current-password">
+  <button id="unlockBtn">Unlock</button>
+  <div class="lock-error" id="lockError"></div>
+</div>
+
 <header>
   <div class="logo">daily<span>.</span></div>
   <div class="header-right">
@@ -226,7 +279,7 @@
   <div id="today-content" style="display:none;flex-direction:column;gap:16px"></div>
   <div id="today-error" class="state-msg" style="display:none">
     Could not load briefing.<br><br>
-    Check your token in settings, or wait for the 8 AM run.
+    Check your token and Gist ID in settings, or wait for the 8 AM run.
   </div>
 </div>
 
@@ -264,16 +317,45 @@
     <h2>Settings</h2>
     <button class="icon-btn" id="closeSettingsBtn">✕</button>
   </div>
-  <div class="settings-note">
-    GitHub Personal Access Token with <strong>repo</strong> scope.<br><br>
-    Get one at <a href="https://github.com/settings/tokens/new?description=daily-app&scopes=repo" target="_blank">github.com/settings/tokens</a>.<br><br>
-    Stored only in this browser. Never sent anywhere except GitHub API.
-  </div>
+
+  <!-- GitHub Token -->
   <div class="card" style="display:flex;flex-direction:column;gap:14px">
-    <label>GitHub Token
+    <div class="card-title">GitHub Token</div>
+    <div class="settings-note" style="margin:0">
+      Token with <strong>repo</strong> + <strong>gist</strong> scope.<br>
+      Get one at <a href="https://github.com/settings/tokens/new?description=daily-app&scopes=repo,gist" target="_blank">github.com/settings/tokens</a>.<br>
+      Stored only in this browser.
+    </div>
+    <label>Personal Access Token
       <input type="password" id="tokenInput" placeholder="ghp_…" autocomplete="off">
     </label>
     <button class="submit" id="saveTokenBtn">Save token</button>
+  </div>
+
+  <!-- Gist ID -->
+  <div class="card" style="display:flex;flex-direction:column;gap:14px">
+    <div class="card-title">Gist ID</div>
+    <div class="settings-note" style="margin:0">
+      The ID of the private gist where daily.json is stored.<br>
+      Find it in GitHub Actions logs after the first run — it's printed as <strong>Gist ID: …</strong>
+    </div>
+    <label>Gist ID
+      <input type="text" id="gistInput" placeholder="a1b2c3d4e5f6…" autocomplete="off" autocapitalize="none" spellcheck="false">
+    </label>
+    <button class="submit" id="saveGistBtn">Save Gist ID</button>
+  </div>
+
+  <!-- App Lock -->
+  <div class="card" style="display:flex;flex-direction:column;gap:14px">
+    <div class="card-title">App Lock</div>
+    <div class="settings-note" style="margin:0">
+      Passphrase required on every fresh open. Stored as a local hash — never sent anywhere.
+    </div>
+    <label id="passLabel">New passphrase
+      <input type="password" id="passInput" placeholder="Choose a passphrase…" autocomplete="new-password">
+    </label>
+    <button class="submit" id="savePassBtn">Set passphrase</button>
+    <button class="submit danger" id="removePassBtn" style="display:none">Remove passphrase</button>
   </div>
 </div>
 
@@ -290,18 +372,75 @@
 
 <script>
 const OWNER = 'PierDeRogatis';
-const TOKEN_KEY = 'gh_token';
-const DATA_API = `https://api.github.com/repos/${OWNER}/personal-assistant/contents/daily.json`;
+const TOKEN_KEY   = 'gh_token';
+const GIST_KEY    = 'gh_gist_id';
+const PASS_KEY    = 'app_pass_hash';
+const SESSION_KEY = 'app_unlocked';
 
-let token = localStorage.getItem(TOKEN_KEY) || '';
+let token  = localStorage.getItem(TOKEN_KEY) || '';
+let gistId = localStorage.getItem(GIST_KEY)  || '';
+
+// ── Init ──────────────────────────────────────────────────────────────────────
 
 function init() {
   document.getElementById('add-due').value = new Date().toISOString().split('T')[0];
-  if (!token) openSettings();
-  else loadBriefing();
+  updatePassUI();
+
+  const hasPass  = !!localStorage.getItem(PASS_KEY);
+  const unlocked = !!sessionStorage.getItem(SESSION_KEY);
+
+  if (hasPass && !unlocked) {
+    showLock();
+    return;
+  }
+  afterUnlock();
 }
 
-// Tabs
+function afterUnlock() {
+  if (!token || !gistId) { openSettings(); return; }
+  loadBriefing();
+}
+
+// ── Lock screen ───────────────────────────────────────────────────────────────
+
+function showLock() {
+  document.getElementById('lock-screen').classList.add('open');
+  setTimeout(() => document.getElementById('lockInput').focus(), 100);
+}
+
+function hideLock() {
+  document.getElementById('lock-screen').classList.remove('open');
+  sessionStorage.setItem(SESSION_KEY, '1');
+}
+
+async function hashPass(s) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function tryUnlock() {
+  const val = document.getElementById('lockInput').value;
+  if (!val) return;
+  const h = await hashPass(val);
+  if (h === localStorage.getItem(PASS_KEY)) {
+    hideLock();
+    document.getElementById('lockInput').value = '';
+    afterUnlock();
+  } else {
+    document.getElementById('lockInput').value = '';
+    const errEl = document.getElementById('lockError');
+    errEl.textContent = 'Wrong passphrase';
+    setTimeout(() => { errEl.textContent = ''; }, 1800);
+  }
+}
+
+document.getElementById('unlockBtn').onclick = tryUnlock;
+document.getElementById('lockInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') tryUnlock();
+});
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+
 function switchTab(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
@@ -310,9 +449,17 @@ function switchTab(name) {
   if (name === 'add') document.getElementById('add-title').focus();
 }
 
-// Settings
+// ── Settings ──────────────────────────────────────────────────────────────────
+
 document.getElementById('settingsBtn').onclick = openSettings;
 document.getElementById('closeSettingsBtn').onclick = closeSettings;
+
+function openSettings() {
+  document.getElementById('gistInput').value = gistId;
+  document.getElementById('settings-screen').classList.add('open');
+}
+function closeSettings() { document.getElementById('settings-screen').classList.remove('open'); }
+
 document.getElementById('saveTokenBtn').onclick = () => {
   const val = document.getElementById('tokenInput').value.trim();
   if (!val.startsWith('ghp_') && !val.startsWith('github_pat_')) {
@@ -321,14 +468,47 @@ document.getElementById('saveTokenBtn').onclick = () => {
   token = val;
   localStorage.setItem(TOKEN_KEY, token);
   document.getElementById('tokenInput').value = '';
-  closeSettings();
   showToast('Token saved');
+};
+
+document.getElementById('saveGistBtn').onclick = () => {
+  const val = document.getElementById('gistInput').value.trim();
+  if (!val) { showToast('Enter a Gist ID', true); return; }
+  gistId = val;
+  localStorage.setItem(GIST_KEY, gistId);
+  showToast('Gist ID saved');
+  closeSettings();
   loadBriefing();
 };
-function openSettings() { document.getElementById('settings-screen').classList.add('open'); }
-function closeSettings() { document.getElementById('settings-screen').classList.remove('open'); }
 
-// Load briefing
+document.getElementById('savePassBtn').onclick = async () => {
+  const val = document.getElementById('passInput').value;
+  if (!val) { showToast('Enter a passphrase', true); return; }
+  if (val.length < 4) { showToast('Too short (min 4 chars)', true); return; }
+  const h = await hashPass(val);
+  localStorage.setItem(PASS_KEY, h);
+  sessionStorage.setItem(SESSION_KEY, '1');
+  document.getElementById('passInput').value = '';
+  updatePassUI();
+  showToast('Passphrase set');
+};
+
+document.getElementById('removePassBtn').onclick = () => {
+  localStorage.removeItem(PASS_KEY);
+  sessionStorage.removeItem(SESSION_KEY);
+  updatePassUI();
+  showToast('App lock removed');
+};
+
+function updatePassUI() {
+  const has = !!localStorage.getItem(PASS_KEY);
+  document.getElementById('passLabel').firstChild.textContent = has ? 'New passphrase (replaces current)' : 'New passphrase';
+  document.getElementById('savePassBtn').textContent = has ? 'Change passphrase' : 'Set passphrase';
+  document.getElementById('removePassBtn').style.display = has ? 'block' : 'none';
+}
+
+// ── Load briefing ─────────────────────────────────────────────────────────────
+
 async function loadBriefing() {
   const loadEl = document.getElementById('today-loading');
   const contEl = document.getElementById('today-content');
@@ -337,16 +517,33 @@ async function loadBriefing() {
   contEl.style.display = 'none';
   errEl.style.display  = 'none';
 
-  if (!token) { loadEl.style.display = 'none'; errEl.style.display = 'block'; return; }
+  if (!token || !gistId) {
+    loadEl.style.display = 'none';
+    errEl.style.display  = 'block';
+    return;
+  }
 
   try {
-    const res = await fetch(DATA_API + '?t=' + Date.now(), {
-      headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json' },
+    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+      headers: {
+        Authorization: 'Bearer ' + token,
+        Accept: 'application/vnd.github+json',
+      },
     });
     if (!res.ok) throw new Error(res.status);
     const envelope = await res.json();
-    const data = JSON.parse(atob(envelope.content.replace(/\n/g, '')));
-    renderBriefing(data);
+    const file = envelope.files['daily.json'];
+    if (!file) throw new Error('daily.json not found in gist');
+
+    let content;
+    if (file.truncated) {
+      const r = await fetch(file.raw_url, { headers: { Authorization: 'Bearer ' + token } });
+      content = await r.text();
+    } else {
+      content = file.content;
+    }
+
+    renderBriefing(JSON.parse(content));
     loadEl.style.display = 'none';
     contEl.style.display = 'flex';
   } catch {
@@ -355,7 +552,8 @@ async function loadBriefing() {
   }
 }
 
-// Render
+// ── Render ────────────────────────────────────────────────────────────────────
+
 function renderBriefing(d) {
   const el = document.getElementById('today-content');
   el.innerHTML = '';
@@ -366,14 +564,12 @@ function renderBriefing(d) {
       'Updated ' + t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
-  // Summary
   el.appendChild(mkEl(`
     <div class="summary-card">
       <div class="summary-date">${esc(d.date)}</div>
       <div class="summary-text">${esc(d.summary || 'No summary available.')}</div>
     </div>`));
 
-  // Task sections
   [['today','🔴 Due today'],['this_week','📅 This week'],['later','📝 Backlog']].forEach(([key, label]) => {
     const items = (d.priorities || []).filter(t => t.category === key);
     if (!items.length) return;
@@ -393,15 +589,15 @@ function renderBriefing(d) {
             ${t.reason ? `<span>${esc(t.reason)}</span>` : ''}
           </div>
         </div>`;
-      const node = t.url ? mkEl(`<a href="${esc(t.url)}" target="_blank" class="task-item">${inner}</a>`)
-                         : mkEl(`<div class="task-item">${inner}</div>`);
+      const node = t.url
+        ? mkEl(`<a href="${esc(t.url)}" target="_blank" class="task-item">${inner}</a>`)
+        : mkEl(`<div class="task-item">${inner}</div>`);
       list.appendChild(node);
     });
     wrap.appendChild(list);
     el.appendChild(wrap);
   });
 
-  // Focus blocks
   const blocks = d.focus_blocks || [];
   if (blocks.length) {
     const wrap = document.createElement('div');
@@ -429,7 +625,8 @@ function renderBriefing(d) {
     </button>`));
 }
 
-// Add task
+// ── Add task ──────────────────────────────────────────────────────────────────
+
 document.getElementById('submitBtn').onclick = addTask;
 document.getElementById('add-title').addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addTask(); }
@@ -473,7 +670,8 @@ async function addTask() {
   }
 }
 
-// Helpers
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
 function mkEl(str) { const d = document.createElement('div'); d.innerHTML = str.trim(); return d.firstElementChild; }
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
