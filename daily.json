@@ -1,7 +1,155 @@
 {
-  "date": "Waiting for first run…",
-  "generated_at": null,
-  "summary": "Your first briefing will appear after the 8 AM run. Trigger it manually from GitHub Actions to see it now.",
-  "priorities": [],
-  "focus_blocks": []
+  "date": "Friday, 08 May 2026",
+  "generated_at": "2026-05-08T23:17:23.895450+02:00",
+  "priorities": [
+    {
+      "title": "Example: Review ai-newsletter phase 14 copy",
+      "source": "notes",
+      "category": "today",
+      "urgency": 8,
+      "url": null,
+      "reason": "Due today and part of active project roadmap"
+    },
+    {
+      "title": "Hello, pierdelsaturnia-6908. There was an error deploying personal-assistant to the production environment. See deployme",
+      "source": "gmail",
+      "category": "today",
+      "urgency": 9,
+      "url": "https://mail.google.com/mail/u/0/#inbox/19e06c63462070d5",
+      "reason": "Production deployment failure requires immediate attention"
+    },
+    {
+      "title": "Hello, pierdelsaturnia-6908. There was an error deploying personal-assistant to the production environment. See deployme",
+      "source": "gmail",
+      "category": "today",
+      "urgency": 9,
+      "url": "https://mail.google.com/mail/u/0/#inbox/19e06c0b5e804dff",
+      "reason": "Duplicate production deployment failure alert"
+    },
+    {
+      "title": "pierdelsaturnia-ux attempted to deploy a commit to pierdelsaturnia-6908's projects on Vercel through GitHub, but the",
+      "source": "gmail",
+      "category": "today",
+      "urgency": 8,
+      "url": "https://mail.google.com/mail/u/0/#inbox/19e06bf37914e969",
+      "reason": "Deployment attempt failure requires investigation"
+    },
+    {
+      "title": "Amante Cuccioloso's birthday",
+      "source": "calendar",
+      "category": "this_week",
+      "urgency": 5,
+      "url": "https://www.google.com/calendar/event?eid=NWQ3Y21hczVwdXZuZHBiYzdjZ2QyczFjZGtfMjAyNjA1MTAgcGllcmRlbHNhdHVybmlhQG0",
+      "reason": "Upcoming personal event, not urgent today"
+    },
+    {
+      "title": "Your script, Telegram Poster, has recently failed to finish successfully. A summary of the failure(s) is shown below. To",
+      "source": "gmail",
+      "category": "this_week",
+      "urgency": 6,
+      "url": "https://mail.google.com/mail/u/0/#inbox/19e0696f4f3103c3",
+      "reason": "Automated script failure needs review but not critical"
+    },
+    {
+      "title": "⚠ Last synced July 5, 2024 To keep your accounts up to date, sync your wallets. Crypto portfolio update Portfolio value:",
+      "source": "gmail",
+      "category": "later",
+      "urgency": 3,
+      "url": "https://mail.google.com/mail/u/0/#inbox/19e090f4c94189b9",
+      "reason": "Old sync reminder, low priority"
+    },
+    {
+      "title": "⚠ Last synced July 5, 2024 To keep your accounts up to date, sync your wallets. Crypto portfolio update Portfolio value:",
+      "source": "gmail",
+      "category": "later",
+      "urgency": 3,
+      "url": "https://mail.google.com/mail/u/0/#inbox/19e03b58383f623d",
+      "reason": "Duplicate old sync reminder"
+    },
+    {
+      "title": "Hello Pierluigi De Rogatis Your invoice for order id avj05y4ctjrd0 is attached to this email Best regards, Too Good To G",
+      "source": "gmail",
+      "category": "later",
+      "urgency": 2,
+      "url": "https://mail.google.com/mail/u/0/#inbox/19e08a0132edb67a",
+      "reason": "Invoice, low priority"
+    },
+    {
+      "title": "Hi Pierluigi De Rogatis, Your order for Coltellacci-Macelleria, Paninoteca & Gastronomia (Surprise Bag Media) has be",
+      "source": "gmail",
+      "category": "later",
+      "urgency": 2,
+      "url": "https://mail.google.com/mail/u/0/#inbox/19e088e312d01b0e",
+      "reason": "Order confirmation, low priority"
+    },
+    {
+      "title": "New sign-in detected on your Vercel account Hello, pierdelsaturnia-6908. Your Vercel account pierdelsaturnia@gmail.com w",
+      "source": "gmail",
+      "category": "later",
+      "urgency": 4,
+      "url": "https://mail.google.com/mail/u/0/#inbox/19e06bb8916af436",
+      "reason": "Security notification, review but not urgent"
+    },
+    {
+      "title": "Hi Pierluigi, We noticed that you haven't logged into your account in the past 6 months. To keep things clean and se",
+      "source": "gmail",
+      "category": "later",
+      "urgency": 3,
+      "url": "https://mail.google.com/mail/u/0/#inbox/19e07a2c70a19413",
+      "reason": "Account activity reminder, low priority"
+    },
+    {
+      "title": "Example: Prepare PH launch assets",
+      "source": "notes",
+      "category": "later",
+      "urgency": 5,
+      "url": null,
+      "reason": "Project planning task, no deadline"
+    }
+  ],
+  "focus_blocks": [
+    {
+      "start": "09:00",
+      "end": "10:30",
+      "task": "Review ai-newsletter phase 14 copy",
+      "why": "Highest priority task due today, part of active project"
+    },
+    {
+      "start": "10:30",
+      "end": "12:00",
+      "task": "Investigate and resolve Vercel deployment failures",
+      "why": "Critical production issues require immediate attention"
+    },
+    {
+      "start": "12:00",
+      "end": "13:00",
+      "task": "Lunch break",
+      "why": "Sustainable work pace"
+    },
+    {
+      "start": "13:00",
+      "end": "15:00",
+      "task": "Continue Vercel deployment issue resolution",
+      "why": "Production stability is critical"
+    },
+    {
+      "start": "15:00",
+      "end": "16:00",
+      "task": "Review Telegram Poster script failures",
+      "why": "Automated script issues need diagnosis"
+    },
+    {
+      "start": "16:00",
+      "end": "17:00",
+      "task": "Handle remaining emails and administrative tasks",
+      "why": "Clear inbox for better focus tomorrow"
+    },
+    {
+      "start": "17:00",
+      "end": "18:00",
+      "task": "Review project roadmap and plan next steps",
+      "why": "Strategic planning for upcoming work"
+    }
+  ],
+  "summary": "Today focuses on critical production issues with Vercel deployments and a high-priority newsletter review due today. Production stability takes precedence, followed by active project work. Administrative tasks are deferred to later in the day or week to maintain focus on critical issues."
 }
