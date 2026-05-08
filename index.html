@@ -6,25 +6,32 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="daily.">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#0a0f1e">
   <link rel="manifest" href="manifest.json">
   <title>daily.</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0f172a;
-      --surface: #1e293b;
-      --border: #334155;
-      --text: #f1f5f9;
-      --muted: #94a3b8;
-      --accent: #6366f1;
-      --accent-dim: #4f46e5;
-      --success: #22c55e;
-      --danger: #ef4444;
-      --warning: #f59e0b;
-      --radius: 14px;
-      --safe-top: env(safe-area-inset-top, 0px);
+      --bg:          #0a0f1e;
+      --surface:     #131929;
+      --surface2:    #1a2236;
+      --border:      #222e45;
+      --border2:     #2a3a56;
+      --text:        #e8edf5;
+      --muted:       #7a8fa8;
+      --muted2:      #4a5e78;
+      --accent:      #6366f1;
+      --accent-glow: rgba(99,102,241,.25);
+      --accent-dim:  #4f46e5;
+      --success:     #22c55e;
+      --danger:      #ef4444;
+      --danger-glow: rgba(239,68,68,.2);
+      --warning:     #f59e0b;
+      --warning-glow:rgba(245,158,11,.2);
+      --teal:        #14b8a6;
+      --radius:      14px;
+      --safe-top:    env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
@@ -32,13 +39,13 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: var(--bg);
       color: var(--text);
-      min-height: 100dvh;
+      height: 100dvh;          /* fixed height so flex children can scroll */
       display: flex;
       flex-direction: column;
       overflow: hidden;
     }
 
-    /* Lock screen */
+    /* ── Lock screen ─────────────────────────────────────────────────────── */
     #lock-screen {
       display: none;
       position: fixed; inset: 0; z-index: 999;
@@ -46,70 +53,91 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 20px;
+      gap: 18px;
       padding: calc(var(--safe-top) + 40px) 32px calc(var(--safe-bottom) + 40px);
     }
     #lock-screen.open { display: flex; }
-    .lock-logo { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
+    .lock-logo { font-size: 26px; font-weight: 800; letter-spacing: -.5px; }
     .lock-logo span { color: var(--accent); }
-    .lock-icon { font-size: 48px; margin-bottom: 4px; }
-    .lock-hint { font-size: 15px; color: var(--muted); }
+    .lock-icon { font-size: 44px; line-height: 1; margin-bottom: 4px; }
+    .lock-hint { font-size: 14px; color: var(--muted); }
     #lockInput {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 12px; color: var(--text); font-size: 18px;
-      padding: 14px 18px; width: 100%; max-width: 320px;
-      outline: none; text-align: center; letter-spacing: 3px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      color: var(--text);
+      font-size: 20px;
+      padding: 14px 20px;
+      width: 100%; max-width: 320px;
+      outline: none;
+      text-align: center;
+      letter-spacing: 4px;
       -webkit-appearance: none;
-      transition: border-color .15s;
+      transition: border-color .15s, box-shadow .15s;
     }
-    #lockInput:focus { border-color: var(--accent); }
+    #lockInput:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    #lockInput.shake { animation: shake .38s ease; }
     #unlockBtn {
-      background: var(--accent); border: none; border-radius: 12px;
+      background: var(--accent);
+      border: none; border-radius: 14px;
       color: #fff; font-size: 16px; font-weight: 600;
-      padding: 14px 32px; cursor: pointer; width: 100%; max-width: 320px;
+      padding: 15px 32px;
+      cursor: pointer; width: 100%; max-width: 320px;
       -webkit-tap-highlight-color: transparent;
       transition: background .15s, transform .1s;
     }
-    #unlockBtn:active { transform: scale(0.97); background: var(--accent-dim); }
-    .lock-error { font-size: 13px; color: var(--danger); min-height: 18px; }
+    #unlockBtn:active { transform: scale(.97); background: var(--accent-dim); }
+    .lock-error { font-size: 13px; color: var(--danger); min-height: 18px; text-align: center; }
 
-    /* Header */
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%,60%  { transform: translateX(-10px); }
+      40%,80%  { transform: translateX(10px); }
+    }
+
+    /* ── Header ─────────────────────────────────────────────────────────── */
     header {
-      padding: calc(var(--safe-top) + 14px) 20px 14px;
+      flex-shrink: 0;
+      padding: calc(var(--safe-top) + 12px) 16px 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      flex-shrink: 0;
       border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      z-index: 10;
     }
-    .logo { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+    .logo { font-size: 20px; font-weight: 800; letter-spacing: -.5px; }
     .logo span { color: var(--accent); }
-    .header-right { display: flex; align-items: center; gap: 10px; }
-    .updated { font-size: 12px; color: var(--muted); }
+    .header-right { display: flex; align-items: center; gap: 8px; }
+    .header-date { font-size: 12px; color: var(--muted); font-weight: 500; }
     button.icon-btn {
-      background: var(--surface);
+      background: var(--surface2);
       border: 1px solid var(--border);
       border-radius: 10px;
       color: var(--muted);
-      width: 36px; height: 36px;
+      width: 34px; height: 34px;
       display: grid; place-items: center;
-      cursor: pointer;
-      font-size: 16px;
+      cursor: pointer; font-size: 15px;
+      -webkit-tap-highlight-color: transparent;
+      transition: background .15s, color .15s;
     }
+    button.icon-btn:active { background: var(--surface); color: var(--text); }
 
-    /* Screens */
+    /* ── Screens ─────────────────────────────────────────────────────────── */
     .screen {
       flex: 1;
+      min-height: 0;           /* critical: allows flex child to shrink & scroll */
       overflow-y: auto;
-      padding: 16px 16px calc(var(--safe-bottom) + 80px);
+      padding: 14px 14px calc(var(--safe-bottom) + 76px);
       display: none;
       flex-direction: column;
-      gap: 16px;
+      gap: 12px;
       -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
     }
     .screen.active { display: flex; }
 
-    /* Tab bar */
+    /* ── Tab bar ─────────────────────────────────────────────────────────── */
     nav {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -121,135 +149,243 @@
     }
     nav button {
       flex: 1; background: none; border: none;
-      color: var(--muted); font-size: 11px; font-weight: 600;
+      color: var(--muted); font-size: 10px; font-weight: 700;
+      letter-spacing: .3px; text-transform: uppercase;
       padding: 10px 4px 8px; cursor: pointer;
-      display: flex; flex-direction: column; align-items: center; gap: 3px;
-      transition: color .15s;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
       -webkit-tap-highlight-color: transparent;
+      transition: color .15s;
     }
-    nav button .ti { font-size: 22px; line-height: 1; }
+    nav button .ti { font-size: 20px; line-height: 1; }
     nav button.active { color: var(--accent); }
 
-    /* Settings overlay */
+    /* ── Settings overlay ────────────────────────────────────────────────── */
     #settings-screen {
       display: none; position: fixed; inset: 0;
       background: var(--bg); z-index: 100;
       flex-direction: column;
-      padding: calc(var(--safe-top) + 20px) 20px calc(var(--safe-bottom) + 20px);
-      gap: 16px; overflow-y: auto;
+      padding: calc(var(--safe-top) + 16px) 16px calc(var(--safe-bottom) + 16px);
+      gap: 14px; overflow-y: auto;
     }
     #settings-screen.open { display: flex; }
-    .settings-header { display: flex; align-items: center; justify-content: space-between; }
-    .settings-header h2 { font-size: 20px; font-weight: 700; }
+    .settings-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
+    .settings-header h2 { font-size: 20px; font-weight: 800; }
 
-    /* Cards */
+    /* ── Cards ───────────────────────────────────────────────────────────── */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 16px;
+      padding: 14px;
     }
-    .card-title { font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .section-label {
+    .card-title {
       font-size: 11px; font-weight: 700; color: var(--muted);
-      text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px;
+      text-transform: uppercase; letter-spacing: .6px; margin-bottom: 12px;
     }
 
-    /* Summary */
+    /* ── Summary ─────────────────────────────────────────────────────────── */
     .summary-card {
-      background: linear-gradient(135deg, #1e1b4b, #1e293b);
-      border: 1px solid #312e81; border-radius: var(--radius); padding: 18px;
+      background: linear-gradient(135deg, #12103a 0%, #131929 100%);
+      border: 1px solid #2a2660;
+      border-radius: var(--radius); padding: 16px;
     }
-    .summary-date { font-size: 13px; color: #a5b4fc; font-weight: 600; margin-bottom: 8px; }
-    .summary-text { font-size: 15px; line-height: 1.6; }
+    .summary-date {
+      font-size: 11px; font-weight: 700; color: #818cf8;
+      text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px;
+    }
+    .summary-text { font-size: 14px; line-height: 1.65; color: #c7d2fe; }
 
-    /* Tasks */
-    .task-list { display: flex; flex-direction: column; gap: 8px; }
+    /* ── Section headers ─────────────────────────────────────────────────── */
+    .section-wrap { display: flex; flex-direction: column; gap: 8px; }
+    .section-hdr {
+      display: flex; align-items: center; gap: 8px;
+      background: none; border: none; padding: 0;
+      cursor: pointer; width: 100%; text-align: left;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .section-hdr:active { opacity: .7; }
+    .section-pill {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .section-name {
+      font-size: 11px; font-weight: 700; letter-spacing: .5px;
+      text-transform: uppercase; flex: 1;
+    }
+    .section-count {
+      font-size: 11px; font-weight: 700;
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 20px; padding: 1px 8px; color: var(--muted);
+    }
+    .section-chevron {
+      font-size: 11px; color: var(--muted2);
+      transition: transform .2s;
+    }
+    .section-chevron.collapsed { transform: rotate(-90deg); }
+    .section-body {
+      display: flex; flex-direction: column; gap: 6px;
+      overflow: hidden;
+      transition: opacity .2s;
+    }
+    .section-body.hidden { display: none; }
+
+    /* ── Task items ──────────────────────────────────────────────────────── */
     .task-item {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 10px; padding: 12px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 13px 11px 14px;
       display: flex; align-items: flex-start; gap: 10px;
       text-decoration: none; color: inherit;
       -webkit-tap-highlight-color: transparent;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .15s;
     }
-    .urgency-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
-    .u-high { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
-    .u-med  { background: var(--warning); }
-    .u-low  { background: var(--muted); }
+    .task-item::before {
+      content: ''; position: absolute;
+      left: 0; top: 0; bottom: 0; width: 3px;
+      border-radius: 10px 0 0 10px;
+    }
+    .task-item.u-high::before { background: var(--danger); }
+    .task-item.u-med::before  { background: var(--warning); }
+    .task-item.u-low::before  { background: var(--border2); }
+    .task-item:active { border-color: var(--border2); }
+
     .task-body { flex: 1; min-width: 0; }
-    .task-title { font-size: 14px; line-height: 1.4; }
-    .task-meta { font-size: 12px; color: var(--muted); margin-top: 3px; display: flex; gap: 8px; flex-wrap: wrap; }
-    .badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 5px; flex-shrink: 0; align-self: flex-start; margin-top: 2px; }
-    .badge-calendar { background: #1e3a5f; color: #60a5fa; }
-    .badge-github   { background: #14532d; color: #4ade80; }
-    .badge-gmail    { background: #422006; color: #fb923c; }
-    .badge-notes    { background: #3b0764; color: #c084fc; }
-
-    /* Focus blocks */
-    .focus-list { display: flex; flex-direction: column; gap: 10px; }
-    .focus-item { display: flex; gap: 12px; align-items: stretch; }
-    .focus-time { font-size: 12px; color: var(--muted); font-weight: 600; white-space: nowrap; padding-top: 3px; min-width: 88px; text-align: right; }
-    .focus-bar { width: 3px; background: var(--accent); border-radius: 3px; flex-shrink: 0; }
-    .focus-content { flex: 1; }
-    .focus-task { font-size: 14px; font-weight: 500; }
-    .focus-why { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
-
-    /* State messages */
-    .state-msg { text-align: center; color: var(--muted); font-size: 14px; padding: 40px 20px; }
-    .spinner {
-      width: 28px; height: 28px; border: 3px solid var(--border);
-      border-top-color: var(--accent); border-radius: 50%;
-      animation: spin .8s linear infinite; margin: 0 auto 12px;
+    .task-title { font-size: 13px; line-height: 1.45; font-weight: 500; }
+    .task-meta { margin-top: 4px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .badge {
+      font-size: 10px; font-weight: 700;
+      padding: 2px 7px; border-radius: 5px;
+      flex-shrink: 0;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .badge-calendar { background: #0f2a4a; color: #60a5fa; }
+    .badge-github   { background: #0f2e1a; color: #4ade80; }
+    .badge-gmail    { background: #2d1500; color: #fb923c; }
+    .badge-notes    { background: #1e0a3c; color: #c084fc; }
+    .task-reason { font-size: 11px; color: var(--muted); line-height: 1.35; }
+    .task-urgency { font-size: 10px; font-weight: 700; color: var(--muted2); flex-shrink: 0; margin-top: 1px; }
 
-    /* Add tab form */
-    label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 500; color: var(--muted); }
-    input, textarea, select {
-      background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
-      color: var(--text); font-size: 16px; font-family: inherit;
-      padding: 12px 14px; width: 100%; outline: none; transition: border-color .15s;
-      -webkit-appearance: none;
+    /* ── Focus blocks ────────────────────────────────────────────────────── */
+    .focus-wrap { display: flex; flex-direction: column; gap: 0; }
+    .focus-item { display: flex; gap: 12px; position: relative; }
+    .focus-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 84px; top: 28px; bottom: -8px;
+      width: 1px; background: var(--border);
     }
-    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
-    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.4; }
-    textarea { resize: none; min-height: 80px; line-height: 1.5; }
-    select option { background: var(--surface); }
-    .title-input { font-size: 18px; font-weight: 500; }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    button.submit {
-      background: var(--accent); border: none; border-radius: var(--radius);
-      color: #fff; font-size: 16px; font-weight: 600; padding: 16px;
-      cursor: pointer; width: 100%; transition: background .15s, transform .1s;
+    .focus-left { display: flex; flex-direction: column; align-items: flex-end; min-width: 84px; gap: 2px; padding-top: 2px; }
+    .focus-start { font-size: 12px; font-weight: 700; color: var(--text); }
+    .focus-dur   { font-size: 10px; color: var(--muted2); }
+    .focus-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--accent); border: 2px solid var(--bg);
+      box-shadow: 0 0 0 2px var(--accent);
+      position: absolute; left: 80px; top: 4px;
+    }
+    .focus-content { flex: 1; padding-bottom: 16px; padding-left: 14px; }
+    .focus-task { font-size: 13px; font-weight: 600; line-height: 1.4; }
+    .focus-why  { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.45; }
+
+    /* ── Skeleton loading ────────────────────────────────────────────────── */
+    #today-skeleton { display: flex; flex-direction: column; gap: 10px; }
+    .skel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      position: relative; overflow: hidden;
+    }
+    .skel::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg,
+        transparent 0%, rgba(255,255,255,.04) 50%, transparent 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s ease-in-out infinite;
+    }
+    .skel-summary { height: 80px; border-radius: var(--radius); }
+    .skel-hdr { height: 20px; width: 120px; margin: 4px 0 4px; border-radius: 6px; }
+    .skel-row { height: 52px; }
+    @keyframes shimmer {
+      0%   { background-position: 200% center; }
+      100% { background-position: -200% center; }
+    }
+
+    /* ── States ──────────────────────────────────────────────────────────── */
+    .state-msg { text-align: center; color: var(--muted); font-size: 14px; padding: 48px 20px; }
+    .state-msg .err-icon { font-size: 36px; margin-bottom: 12px; }
+    .state-msg p { line-height: 1.6; }
+    .retry-btn {
+      margin-top: 14px;
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 10px; color: var(--text); font-size: 13px; font-weight: 600;
+      padding: 10px 24px; cursor: pointer;
       -webkit-tap-highlight-color: transparent;
     }
-    button.submit:active { transform: scale(0.98); background: var(--accent-dim); }
-    button.submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ── Pull indicator ──────────────────────────────────────────────────── */
+    #pull-indicator {
+      text-align: center; font-size: 12px; color: var(--muted);
+      height: 0; overflow: hidden; transition: height .2s, opacity .2s;
+      opacity: 0;
+    }
+    #pull-indicator.show { height: 28px; opacity: 1; }
+
+    /* ── Add form ────────────────────────────────────────────────────────── */
+    label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+    input, textarea, select {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-size: 16px;
+      font-family: inherit; padding: 12px 14px; width: 100%;
+      outline: none; transition: border-color .15s, box-shadow .15s;
+      -webkit-appearance: none;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: .4; }
+    textarea { resize: none; min-height: 80px; line-height: 1.5; }
+    select option { background: var(--surface2); }
+    .title-input { font-size: 18px; font-weight: 500; letter-spacing: -.2px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    button.submit {
+      background: var(--accent); border: none; border-radius: var(--radius);
+      color: #fff; font-size: 15px; font-weight: 700; padding: 15px;
+      cursor: pointer; width: 100%;
+      -webkit-tap-highlight-color: transparent;
+      transition: background .15s, transform .1s;
+    }
+    button.submit:active { transform: scale(.98); background: var(--accent-dim); }
+    button.submit:disabled { opacity: .45; cursor: not-allowed; transform: none; }
     button.submit.danger { background: var(--danger); }
     button.submit.danger:active { background: #dc2626; }
-    button.submit.secondary {
-      background: transparent; border: 1px solid var(--border);
-      color: var(--muted);
+    button.submit.ghost {
+      background: transparent; border: 1px solid var(--border2); color: var(--muted);
     }
-    button.submit.secondary:active { background: var(--surface); }
+    button.submit.ghost:active { background: var(--surface2); }
 
-    .settings-note {
-      font-size: 13px; color: var(--muted); line-height: 1.6;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 16px;
+    .hint-note {
+      font-size: 12px; color: var(--muted); line-height: 1.6;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 14px;
     }
-    .settings-note a { color: var(--accent); text-decoration: none; }
+    .hint-note a { color: var(--accent); text-decoration: none; }
 
-    /* Toast */
+    /* ── Toast ───────────────────────────────────────────────────────────── */
     .toast {
-      position: fixed; bottom: calc(var(--safe-bottom) + 88px);
+      position: fixed; bottom: calc(var(--safe-bottom) + 84px);
       left: 50%; transform: translateX(-50%) translateY(60px);
-      background: var(--success); color: #fff; font-size: 14px; font-weight: 600;
-      padding: 10px 22px; border-radius: 100px; white-space: nowrap;
-      transition: transform .3s cubic-bezier(0.34,1.56,0.64,1), opacity .3s;
+      background: #1a2a1a; color: var(--success);
+      border: 1px solid var(--success);
+      font-size: 13px; font-weight: 600;
+      padding: 9px 20px; border-radius: 100px; white-space: nowrap;
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .3s;
       opacity: 0; pointer-events: none; z-index: 200;
     }
-    .toast.error { background: var(--danger); }
+    .toast.error { background: #2a1a1a; color: var(--danger); border-color: var(--danger); }
     .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
   </style>
 </head>
@@ -260,7 +396,7 @@
   <div class="lock-logo">daily<span>.</span></div>
   <div class="lock-icon">🔒</div>
   <div class="lock-hint">Enter passphrase to continue</div>
-  <input type="password" id="lockInput" placeholder="Passphrase…" autocomplete="current-password">
+  <input type="password" id="lockInput" placeholder="••••••••" autocomplete="current-password">
   <button id="unlockBtn">Unlock</button>
   <div class="lock-error" id="lockError"></div>
 </div>
@@ -268,24 +404,39 @@
 <header>
   <div class="logo">daily<span>.</span></div>
   <div class="header-right">
-    <span class="updated" id="updatedAt"></span>
-    <button class="icon-btn" id="settingsBtn">⚙️</button>
+    <span class="header-date" id="headerDate"></span>
+    <button class="icon-btn" id="refreshBtn" title="Refresh">↻</button>
+    <button class="icon-btn" id="settingsBtn">⚙</button>
   </div>
 </header>
 
 <!-- TODAY -->
 <div class="screen active" id="today-screen">
-  <div id="today-loading" class="state-msg"><div class="spinner"></div>Loading briefing…</div>
-  <div id="today-content" style="display:none;flex-direction:column;gap:16px"></div>
+  <div id="pull-indicator">↓ Release to refresh</div>
+
+  <div id="today-skeleton">
+    <div class="skel skel-summary"></div>
+    <div class="skel skel-hdr" style="width:100px"></div>
+    <div class="skel skel-row"></div>
+    <div class="skel skel-row"></div>
+    <div class="skel skel-hdr" style="width:140px;margin-top:4px"></div>
+    <div class="skel skel-row"></div>
+    <div class="skel skel-row"></div>
+    <div class="skel skel-row"></div>
+  </div>
+
+  <div id="today-content" style="display:none;flex-direction:column;gap:12px"></div>
+
   <div id="today-error" class="state-msg" style="display:none">
-    Could not load briefing.<br><br>
-    Check your token and Gist ID in settings, or wait for the 8 AM run.
+    <div class="err-icon">⚠️</div>
+    <p>Could not load briefing.<br>Check your token and Gist ID in settings.</p>
+    <button class="retry-btn" onclick="loadBriefing()">Retry</button>
   </div>
 </div>
 
 <!-- ADD -->
 <div class="screen" id="add-screen">
-  <div class="card" style="display:flex;flex-direction:column;gap:16px">
+  <div class="card" style="display:flex;flex-direction:column;gap:14px">
     <label>What's on your mind?
       <input class="title-input" type="text" id="add-title" placeholder="Task or idea…" autocomplete="off">
     </label>
@@ -304,7 +455,7 @@
         <input type="date" id="add-due">
       </label>
     </div>
-    <label>Notes <span style="font-weight:400">(optional)</span>
+    <label>Notes <span style="font-weight:400;text-transform:none">(optional)</span>
       <textarea id="add-notes" placeholder="Extra context…"></textarea>
     </label>
     <button class="submit" id="submitBtn">Add task</button>
@@ -318,13 +469,11 @@
     <button class="icon-btn" id="closeSettingsBtn">✕</button>
   </div>
 
-  <!-- GitHub Token -->
-  <div class="card" style="display:flex;flex-direction:column;gap:14px">
+  <div class="card" style="display:flex;flex-direction:column;gap:12px">
     <div class="card-title">GitHub Token</div>
-    <div class="settings-note" style="margin:0">
+    <div class="hint-note">
       Token with <strong>repo</strong> + <strong>gist</strong> scope.<br>
-      Get one at <a href="https://github.com/settings/tokens/new?description=daily-app&scopes=repo,gist" target="_blank">github.com/settings/tokens</a>.<br>
-      Stored only in this browser.
+      <a href="https://github.com/settings/tokens/new?description=daily-app&scopes=repo,gist" target="_blank">github.com/settings/tokens</a> — stored only in this browser.
     </div>
     <label>Personal Access Token
       <input type="password" id="tokenInput" placeholder="ghp_…" autocomplete="off">
@@ -332,12 +481,11 @@
     <button class="submit" id="saveTokenBtn">Save token</button>
   </div>
 
-  <!-- Gist ID -->
-  <div class="card" style="display:flex;flex-direction:column;gap:14px">
+  <div class="card" style="display:flex;flex-direction:column;gap:12px">
     <div class="card-title">Gist ID</div>
-    <div class="settings-note" style="margin:0">
-      The ID of the private gist where daily.json is stored.<br>
-      Find it in GitHub Actions logs after the first run — it's printed as <strong>Gist ID: …</strong>
+    <div class="hint-note">
+      ID of the private gist holding daily.json.<br>
+      Printed in GitHub Actions logs as <strong>Gist ID: …</strong>
     </div>
     <label>Gist ID
       <input type="text" id="gistInput" placeholder="a1b2c3d4e5f6…" autocomplete="off" autocapitalize="none" spellcheck="false">
@@ -345,13 +493,12 @@
     <button class="submit" id="saveGistBtn">Save Gist ID</button>
   </div>
 
-  <!-- App Lock -->
-  <div class="card" style="display:flex;flex-direction:column;gap:14px">
+  <div class="card" style="display:flex;flex-direction:column;gap:12px">
     <div class="card-title">App Lock</div>
-    <div class="settings-note" style="margin:0">
-      Passphrase required on every fresh open. Stored as a local hash — never sent anywhere.
+    <div class="hint-note">
+      Passphrase required on every fresh open. Hashed locally, never sent anywhere.
     </div>
-    <label id="passLabel">New passphrase
+    <label id="passLabel">Passphrase
       <input type="password" id="passInput" placeholder="Choose a passphrase…" autocomplete="new-password">
     </label>
     <button class="submit" id="savePassBtn">Set passphrase</button>
@@ -371,28 +518,27 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const OWNER = 'PierDeRogatis';
-const TOKEN_KEY   = 'gh_token';
-const GIST_KEY    = 'gh_gist_id';
-const PASS_KEY    = 'app_pass_hash';
-const SESSION_KEY = 'app_unlocked';
+const OWNER        = 'PierDeRogatis';
+const TOKEN_KEY    = 'gh_token';
+const GIST_KEY     = 'gh_gist_id';
+const PASS_KEY     = 'app_pass_hash';
+const SESSION_KEY  = 'app_unlocked';
+const DEFAULT_GIST = 'f25d9aa1bf7de8df03a0f0eef1cd9665';
 
 let token  = localStorage.getItem(TOKEN_KEY) || '';
-let gistId = localStorage.getItem(GIST_KEY)  || '';
+let gistId = localStorage.getItem(GIST_KEY)  || DEFAULT_GIST;
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 function init() {
   document.getElementById('add-due').value = new Date().toISOString().split('T')[0];
+  document.getElementById('headerDate').textContent =
+    new Date().toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
   updatePassUI();
 
   const hasPass  = !!localStorage.getItem(PASS_KEY);
   const unlocked = !!sessionStorage.getItem(SESSION_KEY);
-
-  if (hasPass && !unlocked) {
-    showLock();
-    return;
-  }
+  if (hasPass && !unlocked) { showLock(); return; }
   afterUnlock();
 }
 
@@ -405,9 +551,8 @@ function afterUnlock() {
 
 function showLock() {
   document.getElementById('lock-screen').classList.add('open');
-  setTimeout(() => document.getElementById('lockInput').focus(), 100);
+  setTimeout(() => document.getElementById('lockInput').focus(), 80);
 }
-
 function hideLock() {
   document.getElementById('lock-screen').classList.remove('open');
   sessionStorage.setItem(SESSION_KEY, '1');
@@ -428,9 +573,15 @@ async function tryUnlock() {
     afterUnlock();
   } else {
     document.getElementById('lockInput').value = '';
-    const errEl = document.getElementById('lockError');
-    errEl.textContent = 'Wrong passphrase';
-    setTimeout(() => { errEl.textContent = ''; }, 1800);
+    const inp = document.getElementById('lockInput');
+    inp.classList.remove('shake');
+    void inp.offsetWidth; // reflow to restart animation
+    inp.classList.add('shake');
+    document.getElementById('lockError').textContent = 'Wrong passphrase';
+    setTimeout(() => {
+      document.getElementById('lockError').textContent = '';
+      inp.classList.remove('shake');
+    }, 1500);
   }
 }
 
@@ -446,13 +597,14 @@ function switchTab(name) {
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
   document.getElementById(name + '-screen').classList.add('active');
   document.getElementById('tab-' + name).classList.add('active');
-  if (name === 'add') document.getElementById('add-title').focus();
+  if (name === 'add') setTimeout(() => document.getElementById('add-title').focus(), 50);
 }
 
 // ── Settings ──────────────────────────────────────────────────────────────────
 
-document.getElementById('settingsBtn').onclick = openSettings;
+document.getElementById('settingsBtn').onclick  = openSettings;
 document.getElementById('closeSettingsBtn').onclick = closeSettings;
+document.getElementById('refreshBtn').onclick = loadBriefing;
 
 function openSettings() {
   document.getElementById('gistInput').value = gistId;
@@ -484,7 +636,7 @@ document.getElementById('saveGistBtn').onclick = () => {
 document.getElementById('savePassBtn').onclick = async () => {
   const val = document.getElementById('passInput').value;
   if (!val) { showToast('Enter a passphrase', true); return; }
-  if (val.length < 4) { showToast('Too short (min 4 chars)', true); return; }
+  if (val.length < 4) { showToast('Min 4 characters', true); return; }
   const h = await hashPass(val);
   localStorage.setItem(PASS_KEY, h);
   sessionStorage.setItem(SESSION_KEY, '1');
@@ -502,7 +654,8 @@ document.getElementById('removePassBtn').onclick = () => {
 
 function updatePassUI() {
   const has = !!localStorage.getItem(PASS_KEY);
-  document.getElementById('passLabel').firstChild.textContent = has ? 'New passphrase (replaces current)' : 'New passphrase';
+  const lbl = document.getElementById('passLabel');
+  lbl.childNodes[0].textContent = has ? 'New passphrase' : 'Passphrase';
   document.getElementById('savePassBtn').textContent = has ? 'Change passphrase' : 'Set passphrase';
   document.getElementById('removePassBtn').style.display = has ? 'block' : 'none';
 }
@@ -510,30 +663,24 @@ function updatePassUI() {
 // ── Load briefing ─────────────────────────────────────────────────────────────
 
 async function loadBriefing() {
-  const loadEl = document.getElementById('today-loading');
+  const skelEl = document.getElementById('today-skeleton');
   const contEl = document.getElementById('today-content');
   const errEl  = document.getElementById('today-error');
-  loadEl.style.display = 'block';
+
+  skelEl.style.display = 'flex';
   contEl.style.display = 'none';
   errEl.style.display  = 'none';
 
-  if (!token || !gistId) {
-    loadEl.style.display = 'none';
-    errEl.style.display  = 'block';
-    return;
-  }
+  if (!token || !gistId) { skelEl.style.display = 'none'; errEl.style.display = 'block'; return; }
 
   try {
     const res = await fetch(`https://api.github.com/gists/${gistId}`, {
-      headers: {
-        Authorization: 'Bearer ' + token,
-        Accept: 'application/vnd.github+json',
-      },
+      headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json' },
     });
     if (!res.ok) throw new Error(res.status);
     const envelope = await res.json();
     const file = envelope.files['daily.json'];
-    if (!file) throw new Error('daily.json not found in gist');
+    if (!file) throw new Error('daily.json not in gist');
 
     let content;
     if (file.truncated) {
@@ -544,10 +691,10 @@ async function loadBriefing() {
     }
 
     renderBriefing(JSON.parse(content));
-    loadEl.style.display = 'none';
+    skelEl.style.display = 'none';
     contEl.style.display = 'flex';
   } catch {
-    loadEl.style.display = 'none';
+    skelEl.style.display = 'none';
     errEl.style.display  = 'block';
   }
 }
@@ -560,70 +707,159 @@ function renderBriefing(d) {
 
   if (d.generated_at) {
     const t = new Date(d.generated_at);
-    document.getElementById('updatedAt').textContent =
+    document.getElementById('headerDate').textContent =
       'Updated ' + t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
+  // Summary
   el.appendChild(mkEl(`
     <div class="summary-card">
-      <div class="summary-date">${esc(d.date)}</div>
-      <div class="summary-text">${esc(d.summary || 'No summary available.')}</div>
+      <div class="summary-date">${esc(d.date || '')}</div>
+      <div class="summary-text">${esc(d.summary || 'No summary yet.')}</div>
     </div>`));
 
-  [['today','🔴 Due today'],['this_week','📅 This week'],['later','📝 Backlog']].forEach(([key, label]) => {
+  const sections = [
+    { key: 'today',     label: 'Due today',  color: 'var(--danger)',  collapsed: false },
+    { key: 'this_week', label: 'This week',   color: 'var(--accent)',  collapsed: false },
+    { key: 'later',     label: 'Backlog',     color: 'var(--muted2)', collapsed: true  },
+  ];
+
+  sections.forEach(({ key, label, color, collapsed }) => {
     const items = (d.priorities || []).filter(t => t.category === key);
     if (!items.length) return;
-    const wrap = document.createElement('div');
-    wrap.innerHTML = `<div class="section-label">${label}</div>`;
-    const list = document.createElement('div');
-    list.className = 'task-list';
-    items.forEach(t => {
-      const u = t.urgency || 5;
-      const dot = u >= 8 ? 'u-high' : u >= 5 ? 'u-med' : 'u-low';
-      const inner = `
-        <div class="urgency-dot ${dot}"></div>
-        <div class="task-body">
-          <div class="task-title">${esc(t.title)}</div>
-          <div class="task-meta">
-            <span class="badge badge-${esc(t.source)}">${esc(t.source)}</span>
-            ${t.reason ? `<span>${esc(t.reason)}</span>` : ''}
-          </div>
-        </div>`;
-      const node = t.url
-        ? mkEl(`<a href="${esc(t.url)}" target="_blank" class="task-item">${inner}</a>`)
-        : mkEl(`<div class="task-item">${inner}</div>`);
-      list.appendChild(node);
-    });
-    wrap.appendChild(list);
-    el.appendChild(wrap);
+    el.appendChild(buildSection(key, label, color, items, collapsed));
   });
 
+  // Focus blocks
   const blocks = d.focus_blocks || [];
   if (blocks.length) {
     const wrap = document.createElement('div');
-    wrap.innerHTML = '<div class="section-label">🧠 Focus blocks</div>';
-    const list = document.createElement('div');
-    list.className = 'focus-list';
-    blocks.forEach(b => list.appendChild(mkEl(`
-      <div class="focus-item">
-        <div class="focus-time">${esc(b.start)}–${esc(b.end)}</div>
-        <div class="focus-bar"></div>
-        <div class="focus-content">
-          <div class="focus-task">${esc(b.task)}</div>
-          ${b.why ? `<div class="focus-why">${esc(b.why)}</div>` : ''}
-        </div>
-      </div>`)));
-    wrap.appendChild(list);
+    wrap.className = 'section-wrap';
+
+    const hdr = mkEl(`
+      <button class="section-hdr" onclick="toggleSection('focus-body')">
+        <span class="section-pill" style="background:var(--teal)"></span>
+        <span class="section-name" style="color:var(--teal)">Focus blocks</span>
+        <span class="section-count">${blocks.length}</span>
+        <span class="section-chevron" id="chev-focus">▾</span>
+      </button>`);
+    wrap.appendChild(hdr);
+
+    const body = document.createElement('div');
+    body.id = 'focus-body';
+    body.className = 'focus-wrap';
+    blocks.forEach(b => {
+      const start = b.start || '';
+      const end   = b.end   || '';
+      const [sh, sm] = start.split(':').map(Number);
+      const [eh, em] = end.split(':').map(Number);
+      const dur = (eh * 60 + em) - (sh * 60 + sm);
+      body.appendChild(mkEl(`
+        <div class="focus-item">
+          <div class="focus-left">
+            <span class="focus-start">${esc(start)}</span>
+            <span class="focus-dur">${dur > 0 ? dur + ' min' : ''}</span>
+          </div>
+          <div class="focus-dot"></div>
+          <div class="focus-content">
+            <div class="focus-task">${esc(b.task)}</div>
+            ${b.why ? `<div class="focus-why">${esc(b.why)}</div>` : ''}
+          </div>
+        </div>`));
+    });
+
+    wrap.appendChild(body);
     el.appendChild(wrap);
   }
 
+  // Last refresh footer
   el.appendChild(mkEl(`
-    <button onclick="loadBriefing()" style="
-      background:none;border:1px solid var(--border);border-radius:10px;
-      color:var(--muted);font-size:13px;padding:10px;cursor:pointer;width:100%">
-      ↻ Refresh
-    </button>`));
+    <div style="text-align:center;padding:8px 0 4px">
+      <button onclick="loadBriefing()" style="
+        background:none;border:1px solid var(--border);border-radius:10px;
+        color:var(--muted2);font-size:12px;padding:8px 20px;cursor:pointer;
+        -webkit-tap-highlight-color:transparent;">
+        ↻ Refresh
+      </button>
+    </div>`));
 }
+
+function buildSection(key, label, color, items, collapsed) {
+  const bodyId  = `sec-${key}`;
+  const chevId  = `chev-${key}`;
+  const wrap = document.createElement('div');
+  wrap.className = 'section-wrap';
+
+  const hdr = mkEl(`
+    <button class="section-hdr" onclick="toggleSection('${bodyId}')">
+      <span class="section-pill" style="background:${color}"></span>
+      <span class="section-name" style="color:${color}">${label}</span>
+      <span class="section-count">${items.length}</span>
+      <span class="section-chevron${collapsed ? ' collapsed' : ''}" id="${chevId}">▾</span>
+    </button>`);
+  wrap.appendChild(hdr);
+
+  const body = document.createElement('div');
+  body.id = bodyId;
+  body.className = 'section-body' + (collapsed ? ' hidden' : '');
+
+  items.forEach(t => {
+    const u = t.urgency || 5;
+    const uClass = u >= 8 ? 'u-high' : u >= 5 ? 'u-med' : 'u-low';
+    const inner = `
+      <div class="task-body">
+        <div class="task-title">${esc(t.title)}</div>
+        <div class="task-meta">
+          <span class="badge badge-${esc(t.source)}">${esc(t.source)}</span>
+          ${t.reason ? `<span class="task-reason">${esc(t.reason)}</span>` : ''}
+        </div>
+      </div>
+      <span class="task-urgency">${u}/10</span>`;
+    const node = t.url
+      ? mkEl(`<a href="${esc(t.url)}" target="_blank" class="task-item ${uClass}">${inner}</a>`)
+      : mkEl(`<div class="task-item ${uClass}">${inner}</div>`);
+    body.appendChild(node);
+  });
+
+  wrap.appendChild(body);
+  return wrap;
+}
+
+function toggleSection(id) {
+  const body = document.getElementById(id);
+  const isHidden = body.classList.contains('hidden');
+  body.classList.toggle('hidden', !isHidden);
+  // find the chevron in the sibling button
+  const chev = body.previousElementSibling.querySelector('.section-chevron');
+  if (chev) chev.classList.toggle('collapsed', !isHidden);
+}
+
+// ── Pull to refresh ───────────────────────────────────────────────────────────
+
+(function() {
+  const screen = document.getElementById('today-screen');
+  const ind    = document.getElementById('pull-indicator');
+  let startY = 0, pulling = false;
+
+  screen.addEventListener('touchstart', e => {
+    startY  = e.touches[0].clientY;
+    pulling = screen.scrollTop === 0;
+  }, { passive: true });
+
+  screen.addEventListener('touchmove', e => {
+    if (!pulling) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy > 40 && screen.scrollTop === 0) ind.classList.add('show');
+  }, { passive: true });
+
+  screen.addEventListener('touchend', e => {
+    if (!pulling) return;
+    const dy = e.changedTouches[0].clientY - startY;
+    ind.classList.remove('show');
+    if (dy > 60 && screen.scrollTop === 0) loadBriefing();
+    pulling = false;
+  }, { passive: true });
+})();
 
 // ── Add task ──────────────────────────────────────────────────────────────────
 
@@ -672,8 +908,14 @@ async function addTask() {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function mkEl(str) { const d = document.createElement('div'); d.innerHTML = str.trim(); return d.firstElementChild; }
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function mkEl(str) {
+  const d = document.createElement('div');
+  d.innerHTML = str.trim();
+  return d.firstElementChild;
+}
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
 let toastTimer;
 function showToast(msg, err = false) {
