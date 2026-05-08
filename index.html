@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Assistant">
+  <meta name="apple-mobile-web-app-title" content="daily.">
   <meta name="theme-color" content="#0f172a">
   <link rel="manifest" href="manifest.json">
-  <title>Personal Assistant</title>
+  <title>daily.</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -22,6 +22,7 @@
       --accent-dim: #4f46e5;
       --success: #22c55e;
       --danger: #ef4444;
+      --warning: #f59e0b;
       --radius: 14px;
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -32,384 +33,459 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100dvh;
-      padding: calc(var(--safe-top) + 16px) 16px calc(var(--safe-bottom) + 16px);
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      max-width: 480px;
-      margin: 0 auto;
+      overflow: hidden;
     }
 
+    /* Header */
     header {
+      padding: calc(var(--safe-top) + 14px) 20px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px 0;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
     }
-
-    .logo { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+    .logo { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
     .logo span { color: var(--accent); }
-
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .updated { font-size: 12px; color: var(--muted); }
     button.icon-btn {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 10px;
       color: var(--muted);
-      width: 40px; height: 40px;
+      width: 36px; height: 36px;
       display: grid; place-items: center;
       cursor: pointer;
-      font-size: 18px;
-      transition: color .15s;
+      font-size: 16px;
     }
-    button.icon-btn:hover { color: var(--text); }
 
+    /* Screens */
+    .screen {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 16px calc(var(--safe-bottom) + 80px);
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .screen.active { display: flex; }
+
+    /* Tab bar */
+    nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      padding-bottom: var(--safe-bottom);
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      z-index: 50;
+    }
+    nav button {
+      flex: 1; background: none; border: none;
+      color: var(--muted); font-size: 11px; font-weight: 600;
+      padding: 10px 4px 8px; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      transition: color .15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    nav button .ti { font-size: 22px; line-height: 1; }
+    nav button.active { color: var(--accent); }
+
+    /* Settings overlay */
+    #settings-screen {
+      display: none; position: fixed; inset: 0;
+      background: var(--bg); z-index: 100;
+      flex-direction: column;
+      padding: calc(var(--safe-top) + 20px) 20px calc(var(--safe-bottom) + 20px);
+      gap: 16px; overflow-y: auto;
+    }
+    #settings-screen.open { display: flex; }
+    .settings-header { display: flex; align-items: center; justify-content: space-between; }
+    .settings-header h2 { font-size: 20px; font-weight: 700; }
+
+    /* Cards */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+      padding: 16px;
+    }
+    .section-label {
+      font-size: 11px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px;
     }
 
-    label {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--muted);
+    /* Summary */
+    .summary-card {
+      background: linear-gradient(135deg, #1e1b4b, #1e293b);
+      border: 1px solid #312e81; border-radius: var(--radius); padding: 18px;
     }
+    .summary-date { font-size: 13px; color: #a5b4fc; font-weight: 600; margin-bottom: 8px; }
+    .summary-text { font-size: 15px; line-height: 1.6; }
 
+    /* Tasks */
+    .task-list { display: flex; flex-direction: column; gap: 8px; }
+    .task-item {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 14px;
+      display: flex; align-items: flex-start; gap: 10px;
+      text-decoration: none; color: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .urgency-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .u-high { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+    .u-med  { background: var(--warning); }
+    .u-low  { background: var(--muted); }
+    .task-body { flex: 1; min-width: 0; }
+    .task-title { font-size: 14px; line-height: 1.4; }
+    .task-meta { font-size: 12px; color: var(--muted); margin-top: 3px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 5px; flex-shrink: 0; align-self: flex-start; margin-top: 2px; }
+    .badge-calendar { background: #1e3a5f; color: #60a5fa; }
+    .badge-github   { background: #14532d; color: #4ade80; }
+    .badge-gmail    { background: #422006; color: #fb923c; }
+    .badge-notes    { background: #3b0764; color: #c084fc; }
+
+    /* Focus blocks */
+    .focus-list { display: flex; flex-direction: column; gap: 10px; }
+    .focus-item { display: flex; gap: 12px; align-items: stretch; }
+    .focus-time { font-size: 12px; color: var(--muted); font-weight: 600; white-space: nowrap; padding-top: 3px; min-width: 88px; text-align: right; }
+    .focus-bar { width: 3px; background: var(--accent); border-radius: 3px; flex-shrink: 0; }
+    .focus-content { flex: 1; }
+    .focus-task { font-size: 14px; font-weight: 500; }
+    .focus-why { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+
+    /* State messages */
+    .state-msg { text-align: center; color: var(--muted); font-size: 14px; padding: 40px 20px; }
+    .spinner {
+      width: 28px; height: 28px; border: 3px solid var(--border);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin .8s linear infinite; margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Add tab form */
+    label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 500; color: var(--muted); }
     input, textarea, select {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      color: var(--text);
-      font-size: 16px;
-      font-family: inherit;
-      padding: 12px 14px;
-      width: 100%;
-      outline: none;
-      transition: border-color .15s;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text); font-size: 16px; font-family: inherit;
+      padding: 12px 14px; width: 100%; outline: none; transition: border-color .15s;
       -webkit-appearance: none;
     }
     input:focus, textarea:focus, select:focus { border-color: var(--accent); }
-    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; }
-
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.4; }
     textarea { resize: none; min-height: 80px; line-height: 1.5; }
-
     select option { background: var(--surface); }
-
-    .title-input {
-      font-size: 18px;
-      font-weight: 500;
-      padding: 14px;
-    }
-
+    .title-input { font-size: 18px; font-weight: 500; }
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
     button.submit {
-      background: var(--accent);
-      border: none;
-      border-radius: var(--radius);
-      color: #fff;
-      font-size: 16px;
-      font-weight: 600;
-      padding: 16px;
-      cursor: pointer;
-      width: 100%;
-      transition: background .15s, transform .1s;
+      background: var(--accent); border: none; border-radius: var(--radius);
+      color: #fff; font-size: 16px; font-weight: 600; padding: 16px;
+      cursor: pointer; width: 100%; transition: background .15s, transform .1s;
       -webkit-tap-highlight-color: transparent;
     }
     button.submit:active { transform: scale(0.98); background: var(--accent-dim); }
     button.submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-    .toast {
-      position: fixed;
-      bottom: calc(var(--safe-bottom) + 24px);
-      left: 50%; transform: translateX(-50%) translateY(80px);
-      background: var(--success);
-      color: #fff;
-      font-size: 14px;
-      font-weight: 600;
-      padding: 12px 24px;
-      border-radius: 100px;
-      white-space: nowrap;
-      transition: transform .3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity .3s;
-      opacity: 0;
-      pointer-events: none;
-      z-index: 100;
-    }
-    .toast.error { background: var(--danger); }
-    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-
-    /* Settings screen */
-    #settings { display: none; flex-direction: column; gap: 16px; }
-    #settings.active { display: flex; }
-    #main { display: flex; flex-direction: column; gap: 16px; }
-    #main.hidden { display: none; }
-
     .settings-note {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.6;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px;
+      font-size: 13px; color: var(--muted); line-height: 1.6;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px;
     }
     .settings-note a { color: var(--accent); text-decoration: none; }
 
-    .section-title {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+    /* Toast */
+    .toast {
+      position: fixed; bottom: calc(var(--safe-bottom) + 88px);
+      left: 50%; transform: translateX(-50%) translateY(60px);
+      background: var(--success); color: #fff; font-size: 14px; font-weight: 600;
+      padding: 10px 22px; border-radius: 100px; white-space: nowrap;
+      transition: transform .3s cubic-bezier(0.34,1.56,0.64,1), opacity .3s;
+      opacity: 0; pointer-events: none; z-index: 200;
     }
-
-    /* Recent tasks */
-    .recent-list { display: flex; flex-direction: column; gap: 8px; }
-    .recent-item {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 14px;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .recent-item .badge {
-      font-size: 11px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 6px;
-      background: #312e81;
-      color: #a5b4fc;
-      flex-shrink: 0;
-    }
-    .recent-item .title { flex: 1; color: var(--text); }
-    .recent-item .repo { font-size: 12px; color: var(--muted); }
+    .toast.error { background: var(--danger); }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
   </style>
 </head>
 <body>
 
 <header>
   <div class="logo">daily<span>.</span></div>
-  <button class="icon-btn" id="settingsBtn" title="Settings">⚙️</button>
+  <div class="header-right">
+    <span class="updated" id="updatedAt"></span>
+    <button class="icon-btn" id="settingsBtn">⚙️</button>
+  </div>
 </header>
 
-<!-- Main capture screen -->
-<div id="main">
-  <div class="card">
-    <label>
-      What's on your mind?
-      <input class="title-input" type="text" id="title" placeholder="Task or idea…" autocomplete="off" autofocus>
-    </label>
+<!-- TODAY -->
+<div class="screen active" id="today-screen">
+  <div id="today-loading" class="state-msg"><div class="spinner"></div>Loading briefing…</div>
+  <div id="today-content" style="display:none;flex-direction:column;gap:16px"></div>
+  <div id="today-error" class="state-msg" style="display:none">
+    Could not load briefing.<br><br>
+    Check your token in settings, or wait for the 8 AM run.
+  </div>
+</div>
 
+<!-- ADD -->
+<div class="screen" id="add-screen">
+  <div class="card" style="display:flex;flex-direction:column;gap:16px">
+    <label>What's on your mind?
+      <input class="title-input" type="text" id="add-title" placeholder="Task or idea…" autocomplete="off">
+    </label>
     <div class="row">
-      <label>
-        Project
-        <select id="repo">
+      <label>Project
+        <select id="add-repo">
           <option value="ai-newsletter">ai-newsletter</option>
-          <option value="ai-newsletter-private">newsletter (private)</option>
+          <option value="ai-newsletter-private">newsletter (pvt)</option>
           <option value="watchforward-scout">wf-scout</option>
           <option value="watchforward-os">wf-os</option>
           <option value="watchforward-public">wf-public</option>
           <option value="personal-assistant">inbox</option>
         </select>
       </label>
-      <label>
-        Due date
-        <input type="date" id="due">
+      <label>Due date
+        <input type="date" id="add-due">
       </label>
     </div>
-
-    <label>
-      Notes <span style="font-weight:400">(optional)</span>
-      <textarea id="notes" placeholder="Extra context…"></textarea>
+    <label>Notes <span style="font-weight:400">(optional)</span>
+      <textarea id="add-notes" placeholder="Extra context…"></textarea>
     </label>
-
     <button class="submit" id="submitBtn">Add task</button>
-  </div>
-
-  <div id="recentSection" style="display:none">
-    <p class="section-title" style="margin-bottom:10px">Added today</p>
-    <div class="recent-list" id="recentList"></div>
   </div>
 </div>
 
-<!-- Settings screen -->
-<div id="settings">
-  <div class="settings-note">
-    Enter a GitHub Personal Access Token with <strong>repo</strong> scope.<br><br>
-    Create one at <a href="https://github.com/settings/tokens/new?description=personal-assistant-app&scopes=repo" target="_blank">github.com/settings/tokens</a>.<br><br>
-    The token is stored only in this browser (localStorage).
+<!-- SETTINGS -->
+<div id="settings-screen">
+  <div class="settings-header">
+    <h2>Settings</h2>
+    <button class="icon-btn" id="closeSettingsBtn">✕</button>
   </div>
-  <div class="card">
-    <label>
-      GitHub Token
+  <div class="settings-note">
+    GitHub Personal Access Token with <strong>repo</strong> scope.<br><br>
+    Get one at <a href="https://github.com/settings/tokens/new?description=daily-app&scopes=repo" target="_blank">github.com/settings/tokens</a>.<br><br>
+    Stored only in this browser. Never sent anywhere except GitHub API.
+  </div>
+  <div class="card" style="display:flex;flex-direction:column;gap:14px">
+    <label>GitHub Token
       <input type="password" id="tokenInput" placeholder="ghp_…" autocomplete="off">
     </label>
     <button class="submit" id="saveTokenBtn">Save token</button>
   </div>
 </div>
 
+<nav>
+  <button id="tab-today" class="active" onclick="switchTab('today')">
+    <span class="ti">☀️</span>Today
+  </button>
+  <button id="tab-add" onclick="switchTab('add')">
+    <span class="ti">＋</span>Add
+  </button>
+</nav>
+
 <div class="toast" id="toast"></div>
 
 <script>
-  const OWNER = 'PierDeRogatis';
-  const TOKEN_KEY = 'gh_token';
+const OWNER = 'PierDeRogatis';
+const TOKEN_KEY = 'gh_token';
+const DATA_URL = `https://raw.githubusercontent.com/${OWNER}/daily-app/main/daily.json`;
 
-  // --- State ---
-  let token = localStorage.getItem(TOKEN_KEY) || '';
-  let session = JSON.parse(sessionStorage.getItem('added') || '[]');
+let token = localStorage.getItem(TOKEN_KEY) || '';
 
-  // --- DOM ---
-  const mainEl = document.getElementById('main');
-  const settingsEl = document.getElementById('settings');
-  const settingsBtn = document.getElementById('settingsBtn');
-  const tokenInput = document.getElementById('tokenInput');
-  const saveTokenBtn = document.getElementById('saveTokenBtn');
-  const submitBtn = document.getElementById('submitBtn');
-  const toastEl = document.getElementById('toast');
-  const recentSection = document.getElementById('recentSection');
-  const recentList = document.getElementById('recentList');
+function init() {
+  document.getElementById('add-due').value = new Date().toISOString().split('T')[0];
+  if (!token) openSettings();
+  else loadBriefing();
+}
 
-  // --- Init ---
-  function init() {
-    if (!token) {
-      showSettings();
-    } else {
-      showMain();
-      renderRecent();
-    }
-    // Set today as default due date
-    document.getElementById('due').value = new Date().toISOString().split('T')[0];
+// Tabs
+function switchTab(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(name + '-screen').classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'add') document.getElementById('add-title').focus();
+}
+
+// Settings
+document.getElementById('settingsBtn').onclick = openSettings;
+document.getElementById('closeSettingsBtn').onclick = closeSettings;
+document.getElementById('saveTokenBtn').onclick = () => {
+  const val = document.getElementById('tokenInput').value.trim();
+  if (!val.startsWith('ghp_') && !val.startsWith('github_pat_')) {
+    showToast('Invalid token format', true); return;
+  }
+  token = val;
+  localStorage.setItem(TOKEN_KEY, token);
+  document.getElementById('tokenInput').value = '';
+  closeSettings();
+  showToast('Token saved');
+  loadBriefing();
+};
+function openSettings() { document.getElementById('settings-screen').classList.add('open'); }
+function closeSettings() { document.getElementById('settings-screen').classList.remove('open'); }
+
+// Load briefing
+async function loadBriefing() {
+  const loadEl = document.getElementById('today-loading');
+  const contEl = document.getElementById('today-content');
+  const errEl  = document.getElementById('today-error');
+  loadEl.style.display = 'block';
+  contEl.style.display = 'none';
+  errEl.style.display  = 'none';
+
+  try {
+    const res = await fetch(DATA_URL + '?t=' + Date.now(), {
+      headers: token ? { Authorization: 'Bearer ' + token } : {},
+    });
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    renderBriefing(data);
+    loadEl.style.display = 'none';
+    contEl.style.display = 'flex';
+  } catch {
+    loadEl.style.display = 'none';
+    errEl.style.display  = 'block';
+  }
+}
+
+// Render
+function renderBriefing(d) {
+  const el = document.getElementById('today-content');
+  el.innerHTML = '';
+
+  if (d.generated_at) {
+    const t = new Date(d.generated_at);
+    document.getElementById('updatedAt').textContent =
+      'Updated ' + t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
-  function showSettings() {
-    mainEl.classList.add('hidden');
-    settingsEl.classList.add('active');
-    settingsBtn.textContent = '✕';
-  }
+  // Summary
+  el.appendChild(mkEl(`
+    <div class="summary-card">
+      <div class="summary-date">${esc(d.date)}</div>
+      <div class="summary-text">${esc(d.summary || 'No summary available.')}</div>
+    </div>`));
 
-  function showMain() {
-    settingsEl.classList.remove('active');
-    mainEl.classList.remove('hidden');
-    settingsBtn.textContent = '⚙️';
-  }
-
-  settingsBtn.addEventListener('click', () => {
-    if (settingsEl.classList.contains('active')) {
-      if (token) showMain();
-    } else {
-      showSettings();
-    }
+  // Task sections
+  [['today','🔴 Due today'],['this_week','📅 This week'],['later','📝 Backlog']].forEach(([key, label]) => {
+    const items = (d.priorities || []).filter(t => t.category === key);
+    if (!items.length) return;
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `<div class="section-label">${label}</div>`;
+    const list = document.createElement('div');
+    list.className = 'task-list';
+    items.forEach(t => {
+      const u = t.urgency || 5;
+      const dot = u >= 8 ? 'u-high' : u >= 5 ? 'u-med' : 'u-low';
+      const inner = `
+        <div class="urgency-dot ${dot}"></div>
+        <div class="task-body">
+          <div class="task-title">${esc(t.title)}</div>
+          <div class="task-meta">
+            <span class="badge badge-${esc(t.source)}">${esc(t.source)}</span>
+            ${t.reason ? `<span>${esc(t.reason)}</span>` : ''}
+          </div>
+        </div>`;
+      const node = t.url ? mkEl(`<a href="${esc(t.url)}" target="_blank" class="task-item">${inner}</a>`)
+                         : mkEl(`<div class="task-item">${inner}</div>`);
+      list.appendChild(node);
+    });
+    wrap.appendChild(list);
+    el.appendChild(wrap);
   });
 
-  saveTokenBtn.addEventListener('click', () => {
-    const val = tokenInput.value.trim();
-    if (!val.startsWith('ghp_') && !val.startsWith('github_pat_')) {
-      showToast('Invalid token format', true); return;
-    }
-    token = val;
-    localStorage.setItem(TOKEN_KEY, token);
-    tokenInput.value = '';
-    showMain();
-    showToast('Token saved');
-  });
-
-  // --- Submit ---
-  submitBtn.addEventListener('click', addTask);
-  document.getElementById('title').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addTask(); }
-  });
-
-  async function addTask() {
-    const title = document.getElementById('title').value.trim();
-    const repo  = document.getElementById('repo').value;
-    const due   = document.getElementById('due').value;
-    const notes = document.getElementById('notes').value.trim();
-
-    if (!title) { document.getElementById('title').focus(); return; }
-
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Adding…';
-
-    let body = notes || '';
-    if (due) body = `due: ${due}\n\n${body}`.trim();
-
-    try {
-      const res = await fetch(`https://api.github.com/repos/${OWNER}/${repo}/issues`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/vnd.github+json',
-        },
-        body: JSON.stringify({ title, body, labels: ['inbox'] }),
-      });
-
-      if (res.status === 401) { showToast('Token invalid — check settings', true); showSettings(); return; }
-      if (!res.ok) throw new Error(await res.text());
-
-      const issue = await res.json();
-      session.unshift({ title, repo, url: issue.html_url, due });
-      sessionStorage.setItem('added', JSON.stringify(session));
-
-      document.getElementById('title').value = '';
-      document.getElementById('notes').value = '';
-      document.getElementById('due').value = new Date().toISOString().split('T')[0];
-      document.getElementById('title').focus();
-
-      renderRecent();
-      showToast(`Added to ${repo}`);
-    } catch (e) {
-      showToast('Failed — check connection', true);
-      console.error(e);
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Add task';
-    }
+  // Focus blocks
+  const blocks = d.focus_blocks || [];
+  if (blocks.length) {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = '<div class="section-label">🧠 Focus blocks</div>';
+    const list = document.createElement('div');
+    list.className = 'focus-list';
+    blocks.forEach(b => list.appendChild(mkEl(`
+      <div class="focus-item">
+        <div class="focus-time">${esc(b.start)}–${esc(b.end)}</div>
+        <div class="focus-bar"></div>
+        <div class="focus-content">
+          <div class="focus-task">${esc(b.task)}</div>
+          ${b.why ? `<div class="focus-why">${esc(b.why)}</div>` : ''}
+        </div>
+      </div>`)));
+    wrap.appendChild(list);
+    el.appendChild(wrap);
   }
 
-  // --- Recent ---
-  function renderRecent() {
-    if (!session.length) { recentSection.style.display = 'none'; return; }
-    recentSection.style.display = 'block';
-    recentList.innerHTML = session.slice(0, 5).map(t => `
-      <a href="${t.url}" target="_blank" class="recent-item" style="text-decoration:none">
-        <span class="badge">${t.repo.replace('watchforward-', 'wf-')}</span>
-        <span class="title">${esc(t.title)}</span>
-        ${t.due ? `<span class="repo">${t.due}</span>` : ''}
-      </a>
-    `).join('');
-  }
+  el.appendChild(mkEl(`
+    <button onclick="loadBriefing()" style="
+      background:none;border:1px solid var(--border);border-radius:10px;
+      color:var(--muted);font-size:13px;padding:10px;cursor:pointer;width:100%">
+      ↻ Refresh
+    </button>`));
+}
 
-  // --- Toast ---
-  let toastTimer;
-  function showToast(msg, error = false) {
-    clearTimeout(toastTimer);
-    toastEl.textContent = msg;
-    toastEl.className = 'toast' + (error ? ' error' : '');
-    requestAnimationFrame(() => toastEl.classList.add('show'));
-    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2800);
-  }
+// Add task
+document.getElementById('submitBtn').onclick = addTask;
+document.getElementById('add-title').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addTask(); }
+});
 
-  function esc(s) {
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
+async function addTask() {
+  const title = document.getElementById('add-title').value.trim();
+  const repo  = document.getElementById('add-repo').value;
+  const due   = document.getElementById('add-due').value;
+  const notes = document.getElementById('add-notes').value.trim();
+  if (!title) { document.getElementById('add-title').focus(); return; }
+  if (!token) { openSettings(); return; }
 
-  // --- Service worker ---
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
-  }
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'Adding…';
 
-  init();
+  let body = notes;
+  if (due) body = `due: ${due}\n\n${body}`.trim();
+
+  try {
+    const res = await fetch(`https://api.github.com/repos/${OWNER}/${repo}/issues`, {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer ' + token,
+        'Content-Type': 'application/json',
+        Accept: 'application/vnd.github+json',
+      },
+      body: JSON.stringify({ title, body, labels: ['inbox'] }),
+    });
+    if (res.status === 401) { openSettings(); showToast('Token invalid', true); return; }
+    if (!res.ok) throw new Error();
+    document.getElementById('add-title').value = '';
+    document.getElementById('add-notes').value = '';
+    document.getElementById('add-due').value = new Date().toISOString().split('T')[0];
+    document.getElementById('add-title').focus();
+    showToast('Added to ' + repo);
+  } catch {
+    showToast('Failed — check connection', true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Add task';
+  }
+}
+
+// Helpers
+function mkEl(str) { const d = document.createElement('div'); d.innerHTML = str.trim(); return d.firstElementChild; }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+let toastTimer;
+function showToast(msg, err = false) {
+  clearTimeout(toastTimer);
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (err ? ' error' : '');
+  requestAnimationFrame(() => t.classList.add('show'));
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+init();
 </script>
 </body>
 </html>
