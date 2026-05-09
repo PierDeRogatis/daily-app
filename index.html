@@ -263,6 +263,7 @@
     .badge-github   { background: #0f2e1a; color: #4ade80; }
     .badge-gmail    { background: #2d1500; color: #fb923c; }
     .badge-notes    { background: #1e0a3c; color: #c084fc; }
+    .badge-goal     { background: #052e16; color: #86efac; font-style: italic; }
     .task-reason { font-size: 11px; color: var(--muted); line-height: 1.35; }
     .task-urgency { font-size: 10px; font-weight: 700; color: var(--muted2); flex-shrink: 0; margin-top: 1px; }
 
@@ -811,6 +812,7 @@ function buildSection(key, label, color, items, collapsed) {
         <div class="task-title">${esc(t.title)}</div>
         <div class="task-meta">
           <span class="badge badge-${esc(t.source)}">${esc(t.source)}</span>
+          ${t.goal ? `<span class="badge badge-goal">${esc(t.goal)}</span>` : ''}
           ${t.reason ? `<span class="task-reason">${esc(t.reason)}</span>` : ''}
         </div>
       </div>
