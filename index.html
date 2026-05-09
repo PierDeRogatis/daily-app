@@ -325,6 +325,27 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    /* ── Install banner ──────────────────────────────────────────────────── */
+    .install-banner {
+      background: linear-gradient(135deg, #1e1b4b, #1a2236);
+      border: 1px solid #4f46e5;
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .install-banner-text { flex: 1; font-size: 13px; line-height: 1.5; }
+    .install-banner-text strong { color: var(--accent); display: block; margin-bottom: 3px; }
+    .install-steps { color: var(--muted); font-size: 12px; }
+    .install-steps .key {
+      display: inline-block; background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 5px; padding: 1px 6px; font-size: 11px; color: var(--text);
+    }
+    .install-dismiss {
+      background: none; border: none; color: var(--muted2);
+      font-size: 18px; line-height: 1; cursor: pointer; padding: 4px; flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
     /* ── Pull indicator ──────────────────────────────────────────────────── */
     #pull-indicator {
       text-align: center; font-size: 12px; color: var(--muted);
@@ -414,6 +435,18 @@
 <!-- TODAY -->
 <div class="screen active" id="today-screen">
   <div id="pull-indicator">↓ Release to refresh</div>
+
+  <!-- Install banner (hidden when already installed as PWA) -->
+  <div class="install-banner" id="install-banner" style="display:none">
+    <div class="install-banner-text">
+      <strong>Install daily. on your phone</strong>
+      <span class="install-steps">
+        iOS Safari: tap <span class="key">⎋ Share</span> → <span class="key">Add to Home Screen</span><br>
+        Android Chrome: tap <span class="key">⋮ Menu</span> → <span class="key">Install App</span>
+      </span>
+    </div>
+    <button class="install-dismiss" onclick="dismissInstall()">✕</button>
+  </div>
 
   <div id="today-skeleton">
     <div class="skel skel-summary"></div>
@@ -712,26 +745,13 @@ function renderBriefing(d) {
       'Updated ' + t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
-  // Summary
-  el.appendChild(mkEl(`
-    <div class="summary-card">
-      <div class="summary-date">${esc(d.date || '')}</div>
-      <div class="summary-text">${esc(d.summary || 'No summary yet.')}</div>
-    </div>`));
+  // 1. Due today — hero, always first
+  const todayItems = (d.priorities || []).filter(t => t.category === 'today');
+  if (todayItems.length) {
+    el.appendChild(buildSection('today', 'Due today', 'var(--danger)', todayItems, false));
+  }
 
-  const sections = [
-    { key: 'today',     label: 'Due today',  color: 'var(--danger)',  collapsed: false },
-    { key: 'this_week', label: 'This week',   color: 'var(--accent)',  collapsed: false },
-    { key: 'later',     label: 'Backlog',     color: 'var(--muted2)', collapsed: true  },
-  ];
-
-  sections.forEach(({ key, label, color, collapsed }) => {
-    const items = (d.priorities || []).filter(t => t.category === key);
-    if (!items.length) return;
-    el.appendChild(buildSection(key, label, color, items, collapsed));
-  });
-
-  // Focus blocks
+  // 2. Focus blocks — schedule for the day, right after urgent tasks
   const blocks = d.focus_blocks || [];
   if (blocks.length) {
     const wrap = document.createElement('div');
@@ -771,6 +791,27 @@ function renderBriefing(d) {
 
     wrap.appendChild(body);
     el.appendChild(wrap);
+  }
+
+  // 3. Summary — context, after the actionable items
+  if (d.summary) {
+    el.appendChild(mkEl(`
+      <div class="summary-card">
+        <div class="summary-date">${esc(d.date || '')}</div>
+        <div class="summary-text">${esc(d.summary)}</div>
+      </div>`));
+  }
+
+  // 4. This week — collapsed by default (less urgent)
+  const weekItems = (d.priorities || []).filter(t => t.category === 'this_week');
+  if (weekItems.length) {
+    el.appendChild(buildSection('this_week', 'This week', 'var(--accent)', weekItems, true));
+  }
+
+  // 5. Backlog — always collapsed
+  const laterItems = (d.priorities || []).filter(t => t.category === 'later');
+  if (laterItems.length) {
+    el.appendChild(buildSection('later', 'Backlog', 'var(--muted2)', laterItems, true));
   }
 
   // Last refresh footer
@@ -927,6 +968,22 @@ function showToast(msg, err = false) {
   t.className = 'toast' + (err ? ' error' : '');
   requestAnimationFrame(() => t.classList.add('show'));
   toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── Install banner ────────────────────────────────────────────────────────────
+
+(function() {
+  const isStandalone = window.navigator.standalone === true ||
+                       window.matchMedia('(display-mode: standalone)').matches;
+  const dismissed = sessionStorage.getItem('install_dismissed');
+  if (!isStandalone && !dismissed) {
+    document.getElementById('install-banner').style.display = 'flex';
+  }
+})();
+
+function dismissInstall() {
+  document.getElementById('install-banner').style.display = 'none';
+  sessionStorage.setItem('install_dismissed', '1');
 }
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
