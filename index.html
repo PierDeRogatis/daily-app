@@ -468,6 +468,24 @@
     .na-action { font-size: 14px; font-weight: 500; line-height: 1.4; }
     .na-why { font-size: 12px; color: var(--muted); line-height: 1.4; }
 
+    /* ── Reply drafts ────────────────────────────────────────────────────── */
+    .reply-draft-item {
+      display: flex; flex-direction: column; gap: 6px;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+    }
+    .reply-draft-item:last-of-type { border-bottom: none; }
+    .reply-meta { display: flex; flex-direction: column; gap: 2px; }
+    .reply-to { font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .4px; }
+    .reply-subject { font-size: 11px; color: var(--muted); }
+    .reply-body { font-size: 14px; line-height: 1.55; background: #1c1a0e; border: 1px solid #3a3510;
+                  border-radius: 8px; padding: 10px 12px; white-space: pre-wrap; }
+    .reply-copy-btn {
+      align-self: flex-end; background: none; border: 1px solid var(--border);
+      border-radius: 8px; color: var(--muted); font-size: 12px; padding: 4px 12px;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .reply-copy-btn.copied { color: var(--teal); border-color: var(--teal); }
+
     /* ── Toast ───────────────────────────────────────────────────────────── */
     .toast {
       position: fixed; bottom: calc(var(--safe-bottom) + 84px);
@@ -1040,6 +1058,28 @@ function renderBriefing(d) {
     el.appendChild(card);
   }
 
+  // 2c. Reply drafts — copyable email replies
+  const replyDrafts = d.reply_drafts || [];
+  if (replyDrafts.length) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = '<div class="card-title">✏️ Draft replies</div>';
+    replyDrafts.forEach((r, i) => {
+      const id = 'draft-' + i;
+      const item = mkEl(`
+        <div class="reply-draft-item">
+          <div class="reply-meta">
+            <span class="reply-to">${esc(r.to)}</span>
+            <span class="reply-subject">${esc(r.subject)}</span>
+          </div>
+          <div class="reply-body" id="${id}">${esc(r.draft)}</div>
+          <button class="reply-copy-btn" onclick="copyDraft('${id}', this)">Copy</button>
+        </div>`);
+      card.appendChild(item);
+    });
+    el.appendChild(card);
+  }
+
   // 3. Summary — context, after the actionable items
   if (d.summary) {
     el.appendChild(mkEl(`
@@ -1129,6 +1169,15 @@ function toggleSection(id) {
 }
 
 // ── Mark done ─────────────────────────────────────────────────────────────────
+
+function copyDraft(id, btn) {
+  const text = document.getElementById(id)?.textContent || '';
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
 
 async function closeIssue(btn, url) {
   const match = url.match(/github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)$/);
