@@ -486,6 +486,29 @@
     }
     .reply-copy-btn.copied { color: var(--teal); border-color: var(--teal); }
 
+    /* ── Voice / mic button ─────────────────────────────────────────────── */
+    .input-mic-row { display: flex; gap: 8px; align-items: center; }
+    .input-mic-row .title-input { flex: 1; }
+    .mic-btn {
+      flex-shrink: 0; width: 42px; height: 42px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background .15s, border-color .15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mic-btn svg { width: 18px; height: 18px; stroke: var(--muted); fill: none; transition: stroke .15s; }
+    .mic-btn:hover svg { stroke: var(--fg); }
+    .mic-btn.recording {
+      background: #3a0a0a; border-color: var(--danger);
+      animation: mic-pulse 1s ease-in-out infinite;
+    }
+    .mic-btn.recording svg { stroke: var(--danger); }
+    .mic-btn.unsupported { opacity: .35; cursor: not-allowed; }
+    @keyframes mic-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,.4); }
+      50%       { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+    }
+
     /* ── Toast ───────────────────────────────────────────────────────────── */
     .toast {
       position: fixed; bottom: calc(var(--safe-bottom) + 84px);
@@ -646,7 +669,17 @@
 <div class="screen" id="add-screen">
   <div class="card" style="display:flex;flex-direction:column;gap:14px">
     <label>What's on your mind?
-      <input class="title-input" type="text" id="add-title" placeholder="Task or idea…" autocomplete="off">
+      <div class="input-mic-row">
+        <input class="title-input" type="text" id="add-title" placeholder="Task or idea…" autocomplete="off">
+        <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="Record voice" type="button">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="2" width="6" height="12" rx="3"/>
+            <path d="M5 10a7 7 0 0 0 14 0"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+            <line x1="9" y1="22" x2="15" y2="22"/>
+          </svg>
+        </button>
+      </div>
     </label>
     <div class="row">
       <label>Project
@@ -1408,6 +1441,61 @@ document.getElementById('submitBtn').onclick = addTask;
 document.getElementById('add-title').addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addTask(); }
 });
+
+// ── Voice capture ────────────────────────────────────────────────────────────
+
+const _SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+let _recognition = null;
+let _isRecording = false;
+
+(function initVoice() {
+  const btn = document.getElementById('micBtn');
+  if (!_SpeechRec) { btn.classList.add('unsupported'); btn.title = 'Voice not supported in this browser'; return; }
+
+  _recognition = new _SpeechRec();
+  _recognition.continuous = false;
+  _recognition.interimResults = true;
+  _recognition.lang = navigator.language || 'en-US';
+
+  _recognition.onresult = e => {
+    const input = document.getElementById('add-title');
+    let interim = '', final = '';
+    for (const res of e.results) {
+      res.isFinal ? (final += res[0].transcript) : (interim += res[0].transcript);
+    }
+    input.value = (final || interim).trim();
+  };
+
+  _recognition.onerror = err => {
+    if (err.error !== 'no-speech') showToast('Mic error: ' + err.error, true);
+    _stopMic();
+  };
+
+  _recognition.onend = _stopMic;
+})();
+
+function _stopMic() {
+  _isRecording = false;
+  const btn = document.getElementById('micBtn');
+  btn.classList.remove('recording');
+  btn.title = 'Record voice';
+}
+
+function toggleMic() {
+  if (!_recognition) return;
+  if (_isRecording) {
+    _recognition.stop();
+    return;
+  }
+  const input = document.getElementById('add-title');
+  input.value = '';
+  input.placeholder = 'Listening…';
+  _isRecording = true;
+  document.getElementById('micBtn').classList.add('recording');
+  _recognition.start();
+  // Restore placeholder after recognition ends regardless of result
+  _recognition.addEventListener('end', () => { input.placeholder = 'Task or idea…'; }, { once: true });
+}
 
 async function addTask() {
   const title = document.getElementById('add-title').value.trim();
