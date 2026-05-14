@@ -285,6 +285,7 @@
     .badge-github   { background: #052e16; color: #86efac; }
     .badge-gmail    { background: #1c0a00; color: #fb923c; }
     .badge-notes    { background: #1a0533; color: #d8b4fe; }
+    .badge-outlook  { background: #0a1a3a; color: #93c5fd; }
     .badge-goal     { background: #052e16; color: #86efac; font-style: italic; }
     .task-reason { font-size: 12px; color: var(--muted); line-height: 1.4; }
     .task-urgency { font-size: 10px; font-weight: 700; color: var(--muted2); flex-shrink: 0; margin-top: 1px; }
@@ -485,6 +486,38 @@
       cursor: pointer; -webkit-tap-highlight-color: transparent;
     }
     .reply-copy-btn.copied { color: var(--teal); border-color: var(--teal); }
+
+    /* ── Daily check-in overlay ─────────────────────────────────────────── */
+    #checkin-overlay {
+      display: none; position: fixed; inset: 0; z-index: 110;
+      background: var(--bg);
+      flex-direction: column;
+      padding: calc(var(--safe-top) + 24px) 20px calc(var(--safe-bottom) + 24px);
+      overflow-y: auto; gap: 16px;
+    }
+    #checkin-overlay.open { display: flex; }
+    .checkin-header {
+      font-size: 22px; font-weight: 700; color: var(--text); line-height: 1.25;
+      margin-bottom: 4px;
+    }
+    .checkin-sub {
+      font-size: 13px; color: var(--muted); margin-bottom: 8px;
+    }
+    .cq-label {
+      font-size: 11px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .6px; margin-bottom: 8px;
+    }
+    .checkin-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .checkin-skip {
+      text-align: center; font-size: 13px; color: var(--muted2);
+      background: none; border: none; cursor: pointer; padding: 8px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .checkin-skip:hover { color: var(--muted); }
 
     /* ── Voice / mic button ─────────────────────────────────────────────── */
     .input-mic-row { display: flex; gap: 8px; align-items: center; }
@@ -801,6 +834,57 @@
     <button class="submit" id="savePassBtn">Set passphrase</button>
     <button class="submit danger" id="removePassBtn" style="display:none">Remove passphrase</button>
   </div>
+
+  <div class="card" style="display:flex;flex-direction:column;gap:12px">
+    <div class="card-title">Push notifications</div>
+    <div class="hint-note">
+      Morning briefing pushed to this device after the daily run (~08:00 Rome).
+    </div>
+    <button class="submit" id="notifBtn" onclick="subscribePush()">Enable notifications</button>
+    <div id="notif-status" style="font-size:12px;color:var(--muted);display:none"></div>
+  </div>
+</div>
+
+<!-- DAILY CHECK-IN OVERLAY -->
+<div id="checkin-overlay">
+  <div class="checkin-header">Good morning.</div>
+  <div class="checkin-sub">30 seconds. Lock in the day.</div>
+
+  <div class="checkin-card">
+    <div class="cq-label">What makes today a win?</div>
+    <input class="title-input" type="text" id="ci-one-thing" placeholder="One specific thing…" autocomplete="off">
+  </div>
+
+  <div class="checkin-card">
+    <div class="cq-label">Energy</div>
+    <div class="chip-group">
+      <button class="chip" data-group="ci-energy" data-val="low" onclick="selectChip(this)">🔴 Low</button>
+      <button class="chip" data-group="ci-energy" data-val="normal" onclick="selectChip(this)">🟡 Normal</button>
+      <button class="chip" data-group="ci-energy" data-val="high" onclick="selectChip(this)">🟢 High</button>
+    </div>
+  </div>
+
+  <div class="checkin-card">
+    <div class="cq-label">Focus time available</div>
+    <div class="chip-group">
+      <button class="chip" data-group="ci-time" data-val="30min" onclick="selectChip(this)">30 min</button>
+      <button class="chip" data-group="ci-time" data-val="1h" onclick="selectChip(this)">1 h</button>
+      <button class="chip" data-group="ci-time" data-val="2h+" onclick="selectChip(this)">2 h+</button>
+    </div>
+  </div>
+
+  <div class="checkin-card">
+    <div class="cq-label">Project focus</div>
+    <div class="chip-group">
+      <button class="chip" data-group="ci-focus" data-val="connect-your-code" onclick="selectChip(this)">connect-your-code</button>
+      <button class="chip" data-group="ci-focus" data-val="glassfire" onclick="selectChip(this)">glassfire</button>
+      <button class="chip" data-group="ci-focus" data-val="watchforward" onclick="selectChip(this)">watchforward</button>
+      <button class="chip" data-group="ci-focus" data-val="inbox" onclick="selectChip(this)">inbox</button>
+    </div>
+  </div>
+
+  <button class="submit" id="checkinSubmitBtn" onclick="submitCheckin()">Lock in →</button>
+  <button class="checkin-skip" onclick="skipCheckin()">Skip today</button>
 </div>
 
 <nav>
@@ -827,6 +911,7 @@ const GIST_KEY     = 'gh_gist_id';
 const PASS_KEY     = 'app_pass_hash';
 const SESSION_KEY  = 'app_unlocked';
 const DEFAULT_GIST = 'f25d9aa1bf7de8df03a0f0eef1cd9665';
+const VAPID_PUBLIC = 'BM1cL4F_jiSRvBr8EXirDofbgqwLZmPzQhM0qg_QySEfQlY46gWRr7Agun3fWcb66kErhtgFcTs6KuyQmoBC8yU';
 
 let token  = localStorage.getItem(TOKEN_KEY) || '';
 let gistId = localStorage.getItem(GIST_KEY)  || DEFAULT_GIST;
@@ -1133,6 +1218,9 @@ function renderBriefing(d) {
   if (laterItems.length) {
     el.appendChild(buildSection('later', 'Backlog', 'var(--muted2)', laterItems, true));
   }
+
+  // Trigger daily check-in once briefing is loaded
+  initCheckin();
 
   // Last refresh footer
   el.appendChild(mkEl(`
@@ -1441,6 +1529,125 @@ document.getElementById('submitBtn').onclick = addTask;
 document.getElementById('add-title').addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addTask(); }
 });
+
+// ── Push notifications ────────────────────────────────────────────────────────
+
+function _urlB64ToUint8(b64) {
+  const pad = '='.repeat((4 - b64.length % 4) % 4);
+  const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+
+async function subscribePush() {
+  const btn = document.getElementById('notifBtn');
+  const status = document.getElementById('notif-status');
+
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    status.textContent = 'Push not supported in this browser.';
+    status.style.display = 'block';
+    return;
+  }
+  if (!token) { openSettings(); return; }
+
+  btn.disabled = true; btn.textContent = 'Subscribing…';
+
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') throw new Error('Permission denied');
+
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: _urlB64ToUint8(VAPID_PUBLIC),
+    });
+
+    // Save subscription to Gist as push_subscription.json
+    const headers = { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' };
+    await fetch(`https://api.github.com/gists/${gistId}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ files: { 'push_subscription.json': { content: JSON.stringify(sub.toJSON(), null, 2) } } }),
+    });
+
+    btn.textContent = '✓ Enabled';
+    status.textContent = 'You\'ll get a push each morning after the briefing runs.';
+    status.style.display = 'block';
+  } catch (e) {
+    btn.disabled = false; btn.textContent = 'Enable notifications';
+    showToast(e.message || 'Failed', true);
+  }
+}
+
+// ── Daily check-in ───────────────────────────────────────────────────────────
+
+const CHECKIN_KEY = 'checkin_date';
+
+function initCheckin() {
+  const today = new Date().toISOString().split('T')[0];
+  if (localStorage.getItem(CHECKIN_KEY) === today) return;
+  setTimeout(() => {
+    document.getElementById('checkin-overlay').classList.add('open');
+    document.getElementById('ci-one-thing').focus();
+  }, 800);
+}
+
+function skipCheckin() {
+  const today = new Date().toISOString().split('T')[0];
+  localStorage.setItem(CHECKIN_KEY, today);
+  document.getElementById('checkin-overlay').classList.remove('open');
+}
+
+async function submitCheckin() {
+  const oneThing = document.getElementById('ci-one-thing').value.trim();
+  const energy   = getChipVal('ci-energy');
+  const time     = getChipVal('ci-time');
+  const focus    = getChipVal('ci-focus');
+
+  if (!token) { openSettings(); return; }
+
+  const btn = document.getElementById('checkinSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const checkin = { one_thing: oneThing || null, energy: energy || null, time: time || null, focus: focus || null };
+
+  try {
+    // 1. Read current context.json from Gist
+    const headers = { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json' };
+    const gistRes = await fetch(`https://api.github.com/gists/${gistId}`, { headers });
+    if (!gistRes.ok) throw new Error('gist read failed');
+    const gistData = await gistRes.json();
+
+    let existing = {};
+    const ctxFile = gistData.files?.['context.json'];
+    if (ctxFile?.content) {
+      try { existing = JSON.parse(ctxFile.content); } catch {}
+    }
+
+    // 2. Merge today_checkin and PATCH back
+    const updated = { ...existing, today_checkin: checkin };
+    const patchRes = await fetch(`https://api.github.com/gists/${gistId}`, {
+      method: 'PATCH',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ files: { 'context.json': { content: JSON.stringify(updated, null, 2) } } }),
+    });
+    if (!patchRes.ok) throw new Error('gist write failed');
+
+    // 3. Trigger workflow_dispatch to re-run today's briefing
+    await fetch(`https://api.github.com/repos/${OWNER}/personal-assistant/actions/workflows/daily.yml/dispatches`, {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ref: 'main' }),
+    });
+
+    // 4. Mark done for today
+    localStorage.setItem(CHECKIN_KEY, new Date().toISOString().split('T')[0]);
+    document.getElementById('checkin-overlay').classList.remove('open');
+    showToast('Briefing refreshing — check back in ~5 min');
+  } catch (e) {
+    showToast('Failed: ' + e.message, true);
+    btn.disabled = false; btn.textContent = 'Lock in →';
+  }
+}
 
 // ── Voice capture ────────────────────────────────────────────────────────────
 
